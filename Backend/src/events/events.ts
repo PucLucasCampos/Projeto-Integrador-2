@@ -17,7 +17,34 @@ export namespace EventHandler {
     status: boolean;
   };
 
-  export async function getAllEvents() {}
+  export const getAllEvents = async (req: Request, res: Response): Promise<void> => {
+   let connection;
+
+   try {
+      connection = await OracleDB.getConnection(dbConfig);
+
+      const sql: string = `
+         SELECT * FROM EVENTS
+      `;
+
+      const result: Event[] | unknown = (await connection.execute(sql)).rows;
+      res.status(200).send({
+         code: res.statusCode,
+         msg: "Resultado da busca Eventos",
+         events: result,
+      });
+   } catch (err) {
+      console.log(err);
+   } finally {
+      if (connection) {
+         try {
+            await connection.close();
+         } catch (err) {
+            console.log(err);
+         }
+      }
+   }
+};
 
   export const postAddEventRoute: RequestHandler = async (
     req: Request,
