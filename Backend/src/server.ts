@@ -16,9 +16,9 @@ routes.get("/", (req: Request, res: Response) => {
    res.send("Acesso não permitido.");
 });
 
-// vamos organizar as rotas em outro local
-// login...
 routes.post("/login", AccountsHandler.loginHandler);
+
+routes.get("/get/accounts", AccountsHandler.getAllAccountsRoute);
 
 routes.get("/getEvents", EventHandler.getAllEvents);
 

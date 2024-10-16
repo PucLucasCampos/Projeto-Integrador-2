@@ -1,7 +1,6 @@
 import { Request, RequestHandler, Response } from "express";
 import OracleDB from "oracledb";
-import { config } from "../dbConfig";
-
+import { dbConfig } from "../dbConfig";
 
 /*
     Nampespace que contém tudo sobre "contas de usuários"
@@ -18,7 +17,7 @@ export namespace AccountsHandler {
   };
 
   async function login(email: string, password: string) {
-    let connection = await OracleDB.getConnection(config);
+    let connection = await OracleDB.getConnection(dbConfig);
 
     const result = await connection.execute(
       `
@@ -31,7 +30,7 @@ export namespace AccountsHandler {
 
     const linhas = result.rows;
 
-    console.dir(linhas, { depth: null })
+    console.dir(linhas, { depth: null });
 
     await connection.close();
 
@@ -51,6 +50,43 @@ export namespace AccountsHandler {
     } else {
       res.statusCode = 400;
       res.send("Requisição inválida - Parâmetros faltando.");
+    }
+  };
+
+  /**
+   * Buscar usuarios cadastrados
+   * @param req 
+   * @param res 
+   */
+  export const getAllAccountsRoute = async (req: Request, res: Response): Promise<void> => {
+    let connection;
+
+    try {
+      connection = await OracleDB.getConnection(dbConfig);
+
+      const sql: string = `
+        SELECT 
+          ID,
+          EMAIL,
+          COMPLETE_NAME,
+          TOKEN 
+        FROM ACCOUNTS
+      `;
+
+      const result: UserAccount[] | unknown = (await connection.execute(sql))
+        .rows;
+
+      res.status(200).send({ code: res.statusCode, msg: "Resultado da busca usuarios", usuarios: result });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
     }
   };
 }
