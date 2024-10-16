@@ -1,7 +1,7 @@
 import { Request, RequestHandler, Response } from "express";
 import OracleDB from "oracledb";
-import dotenv from "dotenv";
-dotenv.config();
+import { config } from "../dbConfig";
+
 
 /*
     Nampespace que contém tudo sobre "contas de usuários"
@@ -11,20 +11,14 @@ export namespace AccountsHandler {
    * Tipo UserAccount
    */
   export type UserAccount = {
-    id: number | undefined;
+    id: number;
     completeName: string;
     email: string;
-    password: string | undefined;
+    password: string;
   };
 
   async function login(email: string, password: string) {
-    OracleDB.outFormat = OracleDB.OUT_FORMAT_OBJECT;
-
-    let connection = await OracleDB.getConnection({
-      user: process.env.ORACLE_USER,
-      password: process.env.ORACLE_PASSWORD,
-      connectString: process.env.ORACLE_CONN_STR,
-    });
+    let connection = await OracleDB.getConnection(config);
 
     const result = await connection.execute(
       `
