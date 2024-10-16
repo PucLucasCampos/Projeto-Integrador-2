@@ -14,11 +14,8 @@ routes.get("/", (req: Request, res: Response) => {
 });
 
 // vamos organizar as rotas em outro local
-routes.post("/login", AccountsHandler.loginAccountRoute);
-
-routes.put("/signUp", AccountsHandler.createAccountRoute);
-
-routes.get("/get/accounts", AccountsHandler.getAllAccountsRoute);
+// login...
+routes.post("/login", AccountsHandler.loginHandler);
 
 server.use(routes);
 
