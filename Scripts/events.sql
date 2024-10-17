@@ -6,7 +6,9 @@ CREATE TABLE EVENTS (
     dataInicio DATE NOT NULL,
     dataFim DATE NOT NULL,
     dataCriacao DATE NOT NULL,
-    status NUMBER (1)
+    status NUMBER (1),
+    accountsID INTEGER,
+    FOREIGN KEY (accountsID) REFERENCES ACCOUNTS(ID)
 );
 
 CREATE SEQUENCE SEQ_EVENTS START WITH 1 INCREMENT BY 1;
