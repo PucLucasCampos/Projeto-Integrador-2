@@ -23,8 +23,26 @@ export namespace EventHandler {
       try {
          connection = await OracleDB.getConnection(dbConfig);
 
+         const eParam = req.get("parametro");
+         let param: string;
+
+         if (eParam == "awating approval"){
+            
+         } else if (eParam == "already accurred") {
+
+         } else if (eParam == "futures") {
+
+         }else {
+          res.status(400).send({
+            code: res.statusCode,
+            msg: "Parametro não econtrado"
+          });
+         }
+
+         
+
          const sql: string = `
-         SELECT * FROM EVENTS
+         SELECT param FROM EVENTS
       `;
 
          const result: Event[] | unknown = (await connection.execute(sql)).rows;
@@ -122,8 +140,10 @@ export namespace EventHandler {
    export const deleteEvent = async (req: Request, res: Response): Promise<void> => {
       let connection;
 
+      
+
       try {
-         
+
       } catch (err) {
 
       } finally {
