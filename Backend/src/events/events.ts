@@ -24,33 +24,30 @@ export namespace EventHandler {
          connection = await OracleDB.getConnection(dbConfig);
 
          const eParam = req.get("parametro");
-         let param: string;
-
-         if (eParam == "awating approval"){
-            
-         } else if (eParam == "already accurred") {
-
-         } else if (eParam == "futures") {
-
-         }else {
-          res.status(400).send({
-            code: res.statusCode,
-            msg: "Parametro não econtrado"
-          });
-         }
-
-         
 
          const sql: string = `
-         SELECT param FROM EVENTS
+         SELECT * FROM EVENTS WHERE STATUS = :param
       `;
 
-         const result: Event[] | unknown = (await connection.execute(sql)).rows;
-         res.status(200).send({
-            code: res.statusCode,
-            msg: "Resultado da busca Eventos",
-            events: result,
-         });
+         if (
+            eParam == "awaiting approval" ||
+            eParam == "already occurred" ||
+            eParam == "futures"
+         ) {
+            const result: Event[] | unknown = (await connection.execute(sql, [eParam]))
+               .rows;
+            res.status(200).send({
+               code: res.statusCode,
+               msg: "Resultado da busca Eventos",
+               events: result,
+            });
+         } else {
+            res.status(400).send({
+               code: res.statusCode,
+               msg: "Parametro não econtrado",
+            });
+            return;
+         }
       } catch (err) {
          console.log(err);
       } finally {
@@ -137,17 +134,12 @@ export namespace EventHandler {
       }
    };
 
-   export const deleteEvent = async (req: Request, res: Response): Promise<void> => {
-      let connection;
+   // export const deleteEvent = async (req: Request, res: Response): Promise<void> => {
+   //    let connection;
 
-      
-
-      try {
-
-      } catch (err) {
-
-      } finally {
-
-      }
-   };
+   //    try {
+   //    } catch (err) {
+   //    } finally {
+   //    }
+   // };
 }
