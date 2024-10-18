@@ -1,9 +1,9 @@
 import { Request } from "express";
-import { UserAccount } from "./user-account";
+import { AccountsHandler } from "../accounts/accounts";
 
 export interface CustomRequest extends Request {
     token?: string;
-    account?: UserAccount
+    account?: AccountsHandler.UserAccount
   }
   
   

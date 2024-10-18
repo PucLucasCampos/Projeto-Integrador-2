@@ -1,12 +1,24 @@
 import { NextFunction, Request, RequestHandler, Response } from "express";
 import OracleDB from "oracledb";
 import { dbConfig } from "../dbConfig";
-import { CustomRequest, UserAccount } from "../types";
+import { CustomRequest } from "../types";
 
 /*
     Nampespace que contém tudo sobre "contas de usuários"
 */
 export namespace AccountsHandler {
+  /**
+   * Tipo UserAccount
+   */
+  export type UserAccount = {
+    id: number;
+    name: string;
+    email: string;
+    password?: string;
+    birthday: string;
+    token?: string;
+  };
+
   /**
    * Função para verificar se o email existe.
    * @param pEmail email do usuário do tipo @type { string }
@@ -173,7 +185,7 @@ export namespace AccountsHandler {
     let connection;
 
     try {
-      const pToken = req.token
+      const pToken = req.token;
 
       if (pToken) {
         connection = await OracleDB.getConnection(dbConfig);
@@ -250,9 +262,13 @@ export namespace AccountsHandler {
           )
         `;
 
-          await connection.execute(sql, [pEmail, pPassword, pName, pBirthday, pRole], {
-            autoCommit: true,
-          });
+          await connection.execute(
+            sql,
+            [pEmail, pPassword, pName, pBirthday, pRole],
+            {
+              autoCommit: true,
+            }
+          );
 
           res.status(200).send({
             code: res.statusCode,
