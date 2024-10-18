@@ -17,15 +17,16 @@ begin
   end loop;
 end;
 
-INSERT INTO ACCOUNTS (ID, EMAIL, PASSWORD, COMPLETE_NAME, TOKEN) VALUES
+INSERT INTO ACCOUNTS (ID, EMAIL, NAME, BIRTHDAY, PASSWORD, TOKEN) VALUES
 (
     SEQ_ACCOUNTS.NEXTVAL,
     'luis@puccampinas.edu.br',
     'luis',
-    'Luis Silva',
+    TO_DATE('2005-02-10', 'YYYY-MM-DD'),
+    '1234',
     dbms_random.string('x',64)
-);
-
+);    
+    
 COMMIT;
 
 SELECT * FROM ACCOUNTS;
@@ -34,3 +35,26 @@ DROP TABLE ACCOUNTS;
 
 SELECT TOKEN FROM ACCOUNTS WHERE email = 'luis@puccampinas.edu.br' AND password = 'luis';
 
+SELECT 
+    A.ID AS accountID, 
+    A.EMAIL, 
+    A.NAME, 
+    A.BIRTHDAY, 
+    B.ID AS betID, 
+    B.valor AS betValue, 
+    E.ID AS eventID, 
+    E.titulo AS eventTitle, 
+    E.descricao AS eventDescription, 
+    E.valorCota, 
+    E.dataInicio, 
+    E.dataFim, 
+    E.dataCriacao, 
+    E.status
+FROM 
+    ACCOUNTS A
+LEFT JOIN 
+    BETS B ON A.ID = B.accountsID
+LEFT JOIN 
+    EVENTS E ON B.eventoID = E.ID
+WHERE 
+    E.status = 'awaiting approval';
