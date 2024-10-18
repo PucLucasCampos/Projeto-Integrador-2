@@ -6,12 +6,12 @@ Plataforma web de apostas em eventos futuros
 
 ## PUT signUp
 ```
-curl --location --request PUT 'http://localhost:3000/signUp' --header 'name: luis' --header 'email: admin01@gmail.com' --header 'password: 123' --header 'name: luis'
+curl --location --request PUT 'http://localhost:3000/signUp' --header 'name: luis' --header 'email: admin01@gmail.com' --header 'password: 123' --header 'birthday: 2024/11/17'
 ```
 
 ## GET Accounts
 ```
-curl --location --request GET 'http://localhost:3000/get/accounts'
+curl --location --request GET 'http://localhost:3000/getAccounts'
 ```
 
 ## POST login

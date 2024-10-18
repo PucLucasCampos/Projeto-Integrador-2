@@ -9,8 +9,8 @@ const port = 3000;
 const server = express();
 const routes = Router();
 
-routes.use(express.json())
-routes.use(express.urlencoded({ extended: true })) 
+routes.use(express.json());
+routes.use(express.urlencoded({ extended: true }));
 
 // definir as rotas.
 // a rota tem um verbo/método http (GET, POST, PUT, DELETE)
@@ -19,13 +19,30 @@ routes.get("/", (req: Request, res: Response) => {
   res.send("Acesso não permitido.");
 });
 
-routes.put("/signUp", AccountsHandler.putCreateAccountsRoute);
+routes.put(
+  "/signUp",
+  AccountsHandler.verifyToken,
+  AccountsHandler.putCreateAccountsRoute
+);
 
 routes.post("/login", AccountsHandler.loginHandler);
 
-routes.get("/getAccounts", AccountsHandler.getAllAccountsRoute);
+routes.get(
+  "/getAccounts",
+  AccountsHandler.verifyToken,
+  AccountsHandler.getAllAccountsRoute
+);
+routes.get(
+  "/getAccount",
+  AccountsHandler.verifyToken,
+  AccountsHandler.getAccountRoute
+);
 
-routes.post('/addNewEvent', EventHandler.postAddEventRoute)
+routes.post(
+  "/addNewEvent",
+  AccountsHandler.verifyToken,
+  EventHandler.postAddEventRoute
+);
 
 routes.get("/getEvents", EventHandler.getAllEvents);
 
