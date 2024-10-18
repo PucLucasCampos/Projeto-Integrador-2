@@ -1,6 +1,7 @@
 import { Request, RequestHandler, Response } from "express";
 import OracleDB from "oracledb";
 import { dbConfig } from "../dbConfig";
+import { CustomRequest } from "../types";
 
 export namespace EventHandler {
    /**
