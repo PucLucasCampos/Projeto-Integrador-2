@@ -6,7 +6,9 @@ CREATE TABLE EVENTS (
     dataInicio DATE NOT NULL,
     dataFim DATE NOT NULL,
     dataCriacao DATE NOT NULL,
-    status NUMBER (1)
+    status NUMBER (1),
+    accountsID INTEGER,
+    FOREIGN KEY (accountsID) REFERENCES ACCOUNTS(ID)
 );
 
 CREATE SEQUENCE SEQ_EVENTS START WITH 1 INCREMENT BY 1;
@@ -22,7 +24,8 @@ INSERT INTO EVENTS
     dataInicio,
     dataFim,
     dataCriacao,
-    status
+    status,
+    accountsID
 ) VALUES (
     SEQ_EVENTS.NEXTVAL,
     'Titulo 01',
@@ -31,7 +34,8 @@ INSERT INTO EVENTS
     TO_DATE('2024-10-16', 'YYYY-MM-DD'),
     TO_DATE('2024-10-20', 'YYYY-MM-DD'),
     TO_DATE('2024-10-15', 'YYYY-MM-DD'),
-    0
+    'awaiting approval',
+    83
 );
 
 COMMIT;
