@@ -26,8 +26,30 @@ export namespace EventHandler {
          const eParam = req.get("parametro");
 
          const sql: string = `
-         SELECT * FROM EVENTS WHERE STATUS = :param
-      `;
+         SELECT 
+            A.ID AS accountID, 
+            A.EMAIL, 
+            A.NAME, 
+            A.BIRTHDAY, 
+            B.ID AS betID, 
+            B.valor AS betValue, 
+            E.ID AS eventID, 
+            E.titulo AS eventTitle, 
+            E.descricao AS eventDescription, 
+            E.valorCota, 
+            E.dataInicio, 
+            E.dataFim, 
+            E.dataCriacao, 
+            E.status
+         FROM 
+            ACCOUNTS A
+         LEFT JOIN 
+            BETS B ON A.ID = B.accountsID
+         LEFT JOIN 
+            EVENTS E ON B.eventoID = E.ID
+         WHERE 
+            E.status = :param;
+         `;
 
          if (
             eParam == "awaiting approval" ||
@@ -134,12 +156,12 @@ export namespace EventHandler {
       }
    };
 
-   // export const deleteEvent = async (req: Request, res: Response): Promise<void> => {
-   //    let connection;
+   export const deleteEvent = async (req: Request, res: Response): Promise<void> => {
+      let connection;
 
-   //    try {
-   //    } catch (err) {
-   //    } finally {
-   //    }
-   // };
+      try {
+      } catch (err) {
+      } finally {
+      }
+   };
 }
