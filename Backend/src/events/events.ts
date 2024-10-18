@@ -85,7 +85,7 @@ export namespace EventHandler {
    };
 
    export const postAddEventRoute: RequestHandler = async (
-      req: Request,
+      req: CustomRequest,
       res: Response
    ) => {
       let connection;
@@ -99,23 +99,26 @@ export namespace EventHandler {
             dataInicio != "" &&
             dataFim != "" &&
             dataCriacao != "" &&
-            req.body
+            req.body &&
+            req.account
          ) {
             connection = await OracleDB.getConnection(dbConfig);
 
             let cota = valorCota ? valorCota : 0;
+            const account = req.account
 
             const sql: string = `
                     INSERT INTO EVENTS
                     (
-                        id,
-                        titulo,
-                        descricao,
-                        valorCota,
-                        dataInicio,
-                        dataFim,
-                        dataCriacao,
-                        status
+                        ID,
+                        TITULO,
+                        DESCRICAO,
+                        VALORCOTA,
+                        DATAINICIO,
+                        DATAFIM,
+                        DATACRIACAO,
+                        STATUS,
+                        ACCOUNTSID
                     ) VALUES (
                         SEQ_EVENTS.NEXTVAL,
                         :titulo,
@@ -124,13 +127,14 @@ export namespace EventHandler {
                         TO_DATE(:dataInicio, 'YYYY-MM-DD'),
                         TO_DATE(:dataFim, 'YYYY-MM-DD'),
                         TO_DATE(:dataCriacao, 'YYYY-MM-DD'),
-                        0
+                        'awaiting approval',
+                        :accountId
                     )
                 `;
 
             await connection.execute(
                sql,
-               [titulo, descricao, cota, dataInicio, dataFim, dataCriacao],
+               [titulo, descricao, cota, dataInicio, dataFim, dataCriacao, account.id],
                { autoCommit: true }
             );
 
