@@ -1,6 +1,7 @@
 import { Request, RequestHandler, Response } from "express";
 import OracleDB from "oracledb";
 import { dbConfig } from "../dbConfig";
+import { CustomRequest } from "../types";
 
 export namespace EventHandler {
   /**
@@ -17,10 +18,13 @@ export namespace EventHandler {
     status: boolean;
   };
 
-  export const getAllEvents = async (req: Request, res: Response): Promise<void> => {
-   let connection;
+  export const getAllEvents = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    let connection;
 
-   try {
+    try {
       connection = await OracleDB.getConnection(dbConfig);
 
       const sql: string = `
@@ -29,25 +33,25 @@ export namespace EventHandler {
 
       const result: Event[] | unknown = (await connection.execute(sql)).rows;
       res.status(200).send({
-         code: res.statusCode,
-         msg: "Resultado da busca Eventos",
-         events: result,
+        code: res.statusCode,
+        msg: "Resultado da busca Eventos",
+        events: result,
       });
-   } catch (err) {
+    } catch (err) {
       console.log(err);
-   } finally {
+    } finally {
       if (connection) {
-         try {
-            await connection.close();
-         } catch (err) {
-            console.log(err);
-         }
+        try {
+          await connection.close();
+        } catch (err) {
+          console.log(err);
+        }
       }
-   }
-};
+    }
+  };
 
   export const postAddEventRoute: RequestHandler = async (
-    req: Request,
+    req: CustomRequest,
     res: Response
   ) => {
     let connection;
@@ -61,38 +65,50 @@ export namespace EventHandler {
         dataInicio != "" &&
         dataFim != "" &&
         dataCriacao != "" &&
-        req.body
+        req.body &&
+        req.account
       ) {
         connection = await OracleDB.getConnection(dbConfig);
 
         let cota = valorCota ? valorCota : 0;
+        const account = req.account;
 
         const sql: string = `
-                    INSERT INTO EVENTS
-                    (
-                        id,
-                        titulo,
-                        descricao,
-                        valorCota,
-                        dataInicio,
-                        dataFim,
-                        dataCriacao,
-                        status
-                    ) VALUES (
-                        SEQ_EVENTS.NEXTVAL,
-                        :titulo,
-                        :descricao,
-                        :valorCota,
-                        TO_DATE(:dataInicio, 'YYYY-MM-DD'),
-                        TO_DATE(:dataFim, 'YYYY-MM-DD'),
-                        TO_DATE(:dataCriacao, 'YYYY-MM-DD'),
-                        0
-                    )
+            INSERT INTO EVENTS
+            (
+                ID,
+                TITULO,
+                DESCRICAO,
+                valorCota,
+                DATAINICIO,
+                DATAFIM,
+                DATACRIACAO,
+                STATUS,
+                ACCOUNTSID
+            ) VALUES (
+                SEQ_EVENTS.NEXTVAL,
+                :titulo,
+                :descricao,
+                :valorCota,
+                TO_DATE(:dataInicio, 'YYYY-MM-DD'),
+                TO_DATE(:dataFim, 'YYYY-MM-DD'),
+                TO_DATE(:dataCriacao, 'YYYY-MM-DD'),
+                'awaiting approval',
+                :accountId
+            )
                 `;
 
         await connection.execute(
           sql,
-          [titulo, descricao, cota, dataInicio, dataFim, dataCriacao],
+          [
+            titulo,
+            descricao,
+            cota,
+            dataInicio,
+            dataFim,
+            dataCriacao,
+            account.id,
+          ],
           { autoCommit: true }
         );
 
