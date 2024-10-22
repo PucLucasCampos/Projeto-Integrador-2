@@ -2,6 +2,7 @@ import { Request, RequestHandler, Response } from "express";
 import OracleDB from "oracledb";
 import { dbConfig } from "../dbConfig";
 import { CustomRequest } from "../types";
+import { AccountsHandler } from "../accounts/accounts";
 
 export namespace EventHandler {
    /**
@@ -49,7 +50,7 @@ export namespace EventHandler {
          LEFT JOIN 
             EVENTS E ON B.eventoID = E.ID
          WHERE 
-            E.status = :param;
+            E.status = :param
          `;
 
          if (
@@ -105,7 +106,7 @@ export namespace EventHandler {
             connection = await OracleDB.getConnection(dbConfig);
 
             let cota = valorCota ? valorCota : 0;
-            const account = req.account
+            const account = req.account;
 
             const sql: string = `
                     INSERT INTO EVENTS
@@ -161,12 +162,61 @@ export namespace EventHandler {
       }
    };
 
-   export const deleteEvent = async (req: Request, res: Response): Promise<void> => {
+   export const deleteEvent = async (
+      req: CustomRequest,
+      res: Response
+   ): Promise<void> => {
       let connection;
 
       try {
+         connection = await OracleDB.getConnection(dbConfig);
+
+         const eTitulo = req.get("titulo");
+         const token = req.get("Authorizatio n")?.split(" ")[1];
+
+         if (!token) {
+            res.status(400).send("Token não fornecido.");
+            return;
+         }
+
+         const user = AccountsHandler.verifyToken;
+
+         if (!user) {
+            res.status(401).send("Token invalido.");
+            return;
+         }
+
+         const selectSql: string = `
+         SELECT
+            E.ID AS eventID,
+            E.status,
+            A.ID AS ownerID
+         FROM
+            EVENTS E
+         LEFT JOIN
+            ACCOUNTS A ON E.accountsID = A.ID
+         WHERE 
+            E.titulo = :titulo
+         `;
+
+         const result = await connection.execute(selectSql, { titulo: eTitulo });
+
+         if (result.rows?.length === 0) {
+            res.status(404).send("Evento não encontrado");
+            return;
+         }
+
+
       } catch (err) {
+         console.error(err);
       } finally {
+         if (connection) {
+            try {
+               await connection.close();
+            } catch (err) {
+               console.error(err);
+            }
+         }
       }
    };
 }
