@@ -171,42 +171,30 @@ export namespace EventHandler {
       try {
          connection = await OracleDB.getConnection(dbConfig);
 
-         const eTitulo = req.get("titulo");
-         const token = req.get("Authorizatio n")?.split(" ")[1];
+         // const eTitulo = req.get("titulo");
+         const eEmail = req.get("email");
+         const ePassword = req.get("password");
 
-         if (!token) {
-            res.status(400).send("Token não fornecido.");
-            return;
-         }
-
-         const user = AccountsHandler.verifyToken;
-
-         if (!user) {
-            res.status(401).send("Token invalido.");
-            return;
-         }
-
-         const selectSql: string = `
-         SELECT
-            E.ID AS eventID,
-            E.status,
-            A.ID AS ownerID
-         FROM
-            EVENTS E
-         LEFT JOIN
-            ACCOUNTS A ON E.accountsID = A.ID
+         const selectRoleSql: string = `
+         SELECT 
+            ROLE 
+         FROM 
+            ACCOUNTS 
          WHERE 
-            E.titulo = :titulo
+            EMAIL = :email AND PASSWORD = :password
          `;
 
-         const result = await connection.execute(selectSql, { titulo: eTitulo });
+         const result: OracleDB.Result<{[key: string]: any}> = await connection.execute(selectRoleSql, [eEmail, ePassword]);
+         console.log(result.rows);
 
-         if (result.rows?.length === 0) {
-            res.status(404).send("Evento não encontrado");
-            return;
-         }
+         // if (result.rows) {
+            
+         //    res.status(404).send("Você não é Moderador");
+         // }
 
-
+         const selectEventSql: string = `
+         
+         `;
       } catch (err) {
          console.error(err);
       } finally {
