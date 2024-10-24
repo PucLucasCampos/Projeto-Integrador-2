@@ -4,7 +4,6 @@ import { dbConfig } from "../dbConfig";
 import { CustomRequest } from "../types";
 
 export namespace WalletHandler {
-  
   export type UserWallet = {
     id: number;
     userId: string;
@@ -12,7 +11,10 @@ export namespace WalletHandler {
     token?: string;
   };
 
-  async function addFundsWallet(userId: number, valorAdd: number): Promise<boolean> {
+  async function addFundsWallet(
+    userId: number,
+    valorAdd: number
+  ): Promise<boolean> {
     let connection;
 
     try {
@@ -24,7 +26,9 @@ export namespace WalletHandler {
         WHERE USER_ID = :userId
       `;
 
-      const result = await connection.execute(sql, [valorAdd, userId], { autoCommit: true });
+      const result = (
+        await connection.execute(sql, [valorAdd, userId], { autoCommit: true })
+      ).rows;
 
       if (result && result.length > 0) {
         return true;
@@ -42,6 +46,8 @@ export namespace WalletHandler {
         }
       }
     }
+
+    return false;
   }
 
   export const addFundsHandler: RequestHandler = async (
@@ -51,27 +57,30 @@ export namespace WalletHandler {
     const userId = req.get("userId");
     const valorAdd = req.get("valorId");
 
-        if (userId <= 0 || valorAdd <= 0){
-            res.status(400).send({
-            code: res.statusCode,
-            msg: "Parametros invalidos"
-            });
-            return;
-        }
+    if (userId && valorAdd) {
+      const numUserId = Number(userId);
 
-        const success = await addFundsToWallet(userId, amount);
+      if (numUserId <= 0 || Number(valorAdd) <= 0) {
+        res.status(400).send({
+          code: res.statusCode,
+          msg: "Parametros invalidos",
+        });
+        return;
+      }
 
-        if (success) {
+      const success = await addFundsWallet(numUserId, Number(valorAdd));
+
+      if (success) {
         res.status(200).send({
-            code: res.statusCode,
-            msg: "Fundos adicionados com sucesso!",
+          code: res.statusCode,
+          msg: "Fundos adicionados com sucesso!",
         });
-        } else {
+      } else {
         res.status(500).send({
-            code: res.statusCode,
-            msg: "Erro ao adicionar fundos.",
+          code: res.statusCode,
+          msg: "Erro ao adicionar fundos.",
         });
-        }
-    };
-};
-
+      }
+    }
+  };
+}
