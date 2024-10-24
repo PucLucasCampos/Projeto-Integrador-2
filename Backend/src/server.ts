@@ -2,6 +2,7 @@ import express from "express";
 import { Request, Response, Router } from "express";
 import { AccountsHandler } from "./accounts/accounts";
 import { EventHandler } from "./events/events";
+import { WalletHandler } from "./wallet/wallet";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -47,6 +48,18 @@ routes.post(
 routes.get("/getEvents", EventHandler.getAllEvents);
 
 // routes.delete("/deleteEvent", EventHandler.deleteEvent);
+
+routes.put(
+  "/addFunds", WalletHandler.addFundsHandler
+);
+
+routes.put(
+  "/withdrawFunds "
+);
+
+routes.put(
+  "/betOnEvent"
+);
 
 server.use(routes);
 
