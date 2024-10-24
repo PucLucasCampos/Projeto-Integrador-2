@@ -54,7 +54,7 @@ routes.put(
 );
 
 routes.put(
-  "/withdrawFunds "
+  "/withdrawFunds ", WalletHandler.withdrawFundsHandler
 );
 
 routes.put(
