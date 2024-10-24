@@ -172,19 +172,34 @@ export namespace EventHandler {
       try {
          connection = await OracleDB.getConnection(dbConfig);
 
-         // const eTitulo = req.get("titulo");
+         const eTitulo = req.get("titulo");
          const eEmail = req.get("email");
          const ePassword = req.get("password");
 
-         if (eEmail && ePassword && req.account) {
-            const role = req.account.role
+         const sql = `
+            UPDATE EVENTS
+            SET status = 'deleted'
+            WHERE titulo = :titulo
+         `;
 
-            if (role == "moderador"){
-               res.send();
+         if (eEmail && ePassword && eTitulo && req.account) {
+            if (req.account.role == "moderador") {
+               //Verificar se ele nao foi aprovado
+               //Verificar se ele nao tem aposta
+               const result = await connection.execute(sql, [eTitulo], {
+                  autoCommit: true,
+               });
+               res.status(200).send({
+                  code: res.statusCode,
+                  msg: "Evento deletado com sucesso",
+               })
+            } else {
+               res.status(400).send({
+                  code: res.statusCode,
+                  msg: "Acesso negado, você não é moderador",
+               })
             }
-
          }
-
       } catch (err) {
          console.error(err);
       } finally {
