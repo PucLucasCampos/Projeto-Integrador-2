@@ -16,6 +16,7 @@ export namespace AccountsHandler {
     email: string;
     password?: string;
     birthday: string;
+    role: string;
     token?: string;
   };
 
@@ -340,7 +341,7 @@ export namespace AccountsHandler {
       connection = await OracleDB.getConnection(dbConfig);
 
       const sql: string = `
-        SELECT id, email, name, birthday FROM ACCOUNTS WHERE token = :token
+        SELECT id, email, name, birthday, role as "role" FROM ACCOUNTS WHERE token = :token
       `;
 
       const result = (await connection.execute(sql, [pToken]))

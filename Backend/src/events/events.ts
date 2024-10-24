@@ -3,6 +3,7 @@ import OracleDB from "oracledb";
 import { dbConfig } from "../dbConfig";
 import { CustomRequest } from "../types";
 import { AccountsHandler } from "../accounts/accounts";
+import { resolve } from "path";
 
 export namespace EventHandler {
    /**
@@ -175,26 +176,15 @@ export namespace EventHandler {
          const eEmail = req.get("email");
          const ePassword = req.get("password");
 
-         const selectRoleSql: string = `
-         SELECT 
-            ROLE 
-         FROM 
-            ACCOUNTS 
-         WHERE 
-            EMAIL = :email AND PASSWORD = :password
-         `;
+         if (eEmail && ePassword && req.account) {
+            const role = req.account.role
 
-         const result: OracleDB.Result<{[key: string]: any}> = await connection.execute(selectRoleSql, [eEmail, ePassword]);
-         console.log(result.rows);
+            if (role == "moderador"){
+               res.send();
+            }
 
-         // if (result.rows) {
-            
-         //    res.status(404).send("Você não é Moderador");
-         // }
+         }
 
-         const selectEventSql: string = `
-         
-         `;
       } catch (err) {
          console.error(err);
       } finally {
