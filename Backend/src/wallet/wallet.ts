@@ -8,7 +8,6 @@ export namespace WalletHandler {
     id: number;
     userId: string;
     saldo: string;
-    token?: string;
   };
 
   async function addFundsWallet(
@@ -51,10 +50,12 @@ export namespace WalletHandler {
   }
 
   export const addFundsHandler: RequestHandler = async (
-    req: Request,
+    req: CustomRequest,
     res: Response
   ) => {
-    const userId = req.get("userId");
+
+    
+    const userId = req.account?.id;
     const valorAdd = req.get("valorId");
 
     if (userId && valorAdd) {

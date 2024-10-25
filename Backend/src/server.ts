@@ -50,11 +50,15 @@ routes.get("/getEvents", EventHandler.getAllEvents);
 // routes.delete("/deleteEvent", EventHandler.deleteEvent);
 
 routes.put(
-  "/addFunds", WalletHandler.addFundsHandler
+  "/addFunds", 
+    AccountsHandler.verifyToken,
+    WalletHandler.addFundsHandler
 );
 
 routes.put(
-  "/withdrawFunds ", WalletHandler.withdrawFundsHandler
+  "/withdrawFunds ", 
+    AccountsHandler.verifyToken,
+    WalletHandler.withdrawFundsHandler
 );
 
 routes.put(
