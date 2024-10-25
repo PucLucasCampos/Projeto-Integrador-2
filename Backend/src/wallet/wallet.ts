@@ -25,6 +25,12 @@ export namespace WalletHandler {
         WHERE USER_ID = :userId
       `;
 
+      // const sql: string = `
+      //   UPDATE historico_wallet
+      //   SET valorAdd = :valorAdd 
+      //   WHERE USER_ID = :userId
+      // `;
+
       const result = (
         await connection.execute(sql, [valorAdd, userId], { autoCommit: true })
       ).rows;
@@ -54,7 +60,8 @@ export namespace WalletHandler {
     res: Response
   ) => {
 
-    
+
+    const wallet = req.get("walletId")
     const userId = req.account?.id;
     const valorAdd = req.get("valorId");
 
