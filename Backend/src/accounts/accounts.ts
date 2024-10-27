@@ -17,7 +17,9 @@ export namespace AccountsHandler {
     password?: string;
     birthday: string;
     token?: string;
+    walletId?: number
   };
+  
 
   /**
    * Função para verificar se o email existe.
@@ -184,29 +186,14 @@ export namespace AccountsHandler {
   ): Promise<void> => {
     let connection;
 
-    try {
-      const pToken = req.token;
+    const pToken = req.token
+    const pAccount = req.account
 
-      if (pToken) {
-        connection = await OracleDB.getConnection(dbConfig);
-
-        const sql: string = `
-          SELECT 
-            ID as "id",
-            EMAIL as "email",
-            NAME as "name",
-            BIRTHDAY as "birthday",
-            ROLE as "role"
-          FROM ACCOUNTS WHERE TOKEN = :token
-        `;
-
-        const result = (await connection.execute(sql, [pToken]))
-          .rows as UserAccount[];
-
+      if (pToken && pAccount) {
         res.status(200).send({
           code: res.statusCode,
           msg: "Resultado da busca usuarios",
-          usuarios: result,
+          usuarios: pAccount,
         });
       } else {
         res.status(400).send({
@@ -214,17 +201,6 @@ export namespace AccountsHandler {
           msg: "Requisição inválida - Parâmetros faltando.",
         });
       }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      if (connection) {
-        try {
-          await connection.close();
-        } catch (err) {
-          console.error(err);
-        }
-      }
-    }
   };
 
   /**
@@ -260,15 +236,38 @@ export namespace AccountsHandler {
               :role,
               dbms_random.string('x',64)
           )
+          RETURNING ID INTO :id
         `;
 
-          await connection.execute(
-            sql,
-            [pEmail, pPassword, pName, pBirthday, pRole],
-            {
+          const bindParams = {
+            email: pEmail,
+            password: pPassword,
+            name: pName,
+            birthday: pBirthday,
+            role: pRole,
+            id: { dir: OracleDB.BIND_OUT, type: OracleDB.NUMBER }, // Captura o ID gerado
+          };
+
+          const newAccount = (await connection.execute(sql, bindParams, {
+            autoCommit: true,
+          })) as { outBinds: { id: number[] } };
+          
+          const newAccountId = newAccount.outBinds.id[0];
+          
+          if (newAccountId) {
+            const sqlWallet: string = `
+            INSERT INTO WALLET (ID, USERID, SALDO) VALUES
+            (
+                SEQ_WALLET.NEXTVAL,
+                :accountId,
+                0
+            )
+          `;
+
+            await connection.execute(sqlWallet, [newAccountId], {
               autoCommit: true,
-            }
-          );
+            });
+          }
 
           res.status(200).send({
             code: res.statusCode,
@@ -340,7 +339,15 @@ export namespace AccountsHandler {
       connection = await OracleDB.getConnection(dbConfig);
 
       const sql: string = `
-        SELECT id, email, name, birthday FROM ACCOUNTS WHERE token = :token
+        SELECT 
+          a.id AS "id",
+          a.email AS "email", 
+          a.name AS "name", 
+          a.birthday AS "birthday", 
+          w.id AS "walletId" 
+        FROM ACCOUNTS a
+        JOIN WALLET w ON a.id = w.userid 
+        WHERE a.token = :token
       `;
 
       const result = (await connection.execute(sql, [pToken]))
