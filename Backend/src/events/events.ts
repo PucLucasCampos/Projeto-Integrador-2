@@ -30,34 +30,33 @@ export namespace EventHandler {
 
          const sql: string = `
          SELECT 
-            A.ID AS accountID, 
-            A.EMAIL, 
-            A.NAME, 
-            A.BIRTHDAY, 
-            B.ID AS betID, 
-            B.valor AS betValue, 
-            E.ID AS eventID, 
-            E.titulo AS eventTitle, 
-            E.descricao AS eventDescription, 
-            E.valorCota, 
-            E.dataInicio, 
-            E.dataFim, 
-            E.dataCriacao, 
-            E.status
-         FROM 
-            ACCOUNTS A
-         LEFT JOIN 
-            BETS B ON A.ID = B.accountsID
-         LEFT JOIN 
-            EVENTS E ON B.eventoID = E.ID
+            E.ID AS "id",
+            E.TITULO AS "titulo",
+            E.DESCRICAO AS "descricao",
+            E.VALORCOTA AS "valorCota",
+            E.DATAINICIO AS "dataInicio",
+            E.DATAFIM AS "dataFim",
+            E.STATUS AS "status",
+            A.ID AS "accountId",
+            A.NAME AS "name",
+            A.EMAIL AS "email",
+            B.ID AS "betId",
+            COALESCE(SUM(B.VALOR), 0) AS "valorApostado"
+         FROM EVENTS E
+            JOIN ACCOUNTS A ON A.ID = E.ACCOUNTSID
+            LEFT JOIN BETS B ON B.ID = E.ID
          WHERE 
-            E.status = :param
+            E.STATUS = :param
+         GROUP BY 
+            E.ID, E.TITULO, E.DESCRICAO, E.VALORCOTA, E.DATAINICIO, E.DATAFIM, E.STATUS,
+            A.ID, A.NAME, A.EMAIL, B.ID
          `;
 
          if (
             eParam == "awaiting approval" ||
             eParam == "already occurred" ||
-            eParam == "futures"
+            eParam == "futures" ||
+            eParam == "deleted"
          ) {
             const result: Event[] | unknown = (await connection.execute(sql, [eParam]))
                .rows;
@@ -176,7 +175,11 @@ export namespace EventHandler {
          const eEmail = req.get("email");
          const ePassword = req.get("password");
 
-         const sql = `
+         const selectSql = `
+            SELECT * FROM EVENTS WHERE TITULO = :titulo 
+         `;
+
+         const updateSql = `
             UPDATE EVENTS
             SET status = 'deleted'
             WHERE titulo = :titulo
@@ -186,18 +189,28 @@ export namespace EventHandler {
             if (req.account.role == "moderador") {
                //Verificar se ele nao foi aprovado
                //Verificar se ele nao tem aposta
-               const result = await connection.execute(sql, [eTitulo], {
+               const resultSelect = await connection.execute(selectSql, [eTitulo], {
                   autoCommit: true,
                });
-               res.status(200).send({
-                  code: res.statusCode,
-                  msg: "Evento deletado com sucesso",
-               })
+               if (resultSelect.rows && resultSelect.rows.length > 0) {
+                  const resultUpdate = await connection.execute(updateSql, [eTitulo], {
+                     autoCommit: true,
+                  });
+                  res.status(200).send({
+                     code: res.statusCode,
+                     msg: "Evento deletado com sucesso",
+                  });
+               } else {
+                  res.status(400).send({
+                     code: res.statusCode,
+                     msg: "Evento não existe",
+                  });
+               }
             } else {
                res.status(400).send({
                   code: res.statusCode,
                   msg: "Acesso negado, você não é moderador",
-               })
+               });
             }
          }
       } catch (err) {

@@ -340,19 +340,16 @@ export namespace AccountsHandler {
       connection = await OracleDB.getConnection(dbConfig);
 
       const sql: string = `
-<<<<<<< HEAD
-        SELECT id, email, name, birthday, role as "role" FROM ACCOUNTS WHERE token = :token
-=======
         SELECT 
           a.id AS "id",
           a.email AS "email", 
           a.name AS "name", 
           a.birthday AS "birthday", 
-          w.id AS "walletId" 
+          w.id AS "walletId",
+          a.role as "role" 
         FROM ACCOUNTS a
         JOIN WALLET w ON a.id = w.userid 
         WHERE a.token = :token
->>>>>>> a7ab0d471e87228f2b3fc86335fea1d420010dcf
       `;
 
       const result = (await connection.execute(sql, [pToken]))

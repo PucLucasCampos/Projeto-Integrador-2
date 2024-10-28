@@ -39,3 +39,25 @@ INSERT INTO EVENTS
 );
 
 COMMIT;
+
+SELECT 
+    E.ID AS "id",
+    E.TITULO AS "titulo",
+    E.DESCRICAO AS "descricao",
+    E.VALORCOTA AS "valorCota",
+    E.DATAINICIO AS "dataInicio",
+    E.DATAFIM AS "dataFim",
+    E.STATUS AS "status",
+    A.ID AS "accountId",
+    A.NAME AS "name",
+    A.EMAIL AS "email",
+    B.ID AS "betId",
+    COALESCE(SUM(B.VALOR), 0) AS "valorApostado"
+FROM EVENTS E
+    JOIN ACCOUNTS A ON A.ID = E.ACCOUNTSID
+    LEFT JOIN BETS B ON B.ID = E.ID
+WHERE 
+    E.STATUS = 'deleted'
+GROUP BY 
+    E.ID, E.TITULO, E.DESCRICAO, E.VALORCOTA, E.DATAINICIO, E.DATAFIM, E.STATUS,
+    A.ID, A.NAME, A.EMAIL, B.ID;
