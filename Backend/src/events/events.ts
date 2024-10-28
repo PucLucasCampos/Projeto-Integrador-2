@@ -4,6 +4,7 @@ import { dbConfig } from "../dbConfig";
 import { CustomRequest } from "../types";
 import { AccountsHandler } from "../accounts/accounts";
 import { resolve } from "path";
+import { sendEmail } from "../utils";
 
 export namespace EventHandler {
    /**
@@ -56,7 +57,8 @@ export namespace EventHandler {
             eParam == "awaiting approval" ||
             eParam == "already occurred" ||
             eParam == "futures" ||
-            eParam == "deleted"
+            eParam == "deleted" ||
+            eParam == "approved" 
          ) {
             const result: Event[] | unknown = (await connection.execute(sql, [eParam]))
                .rows;
@@ -193,7 +195,7 @@ export namespace EventHandler {
                   autoCommit: true,
                });
                if (resultSelect.rows && resultSelect.rows.length > 0) {
-                  const resultUpdate = await connection.execute(updateSql, [eTitulo], {
+                  await connection.execute(updateSql, [eTitulo], {
                      autoCommit: true,
                   });
                   res.status(200).send({
@@ -221,6 +223,79 @@ export namespace EventHandler {
                await connection.close();
             } catch (err) {
                console.error(err);
+            }
+         }
+      }
+   };
+
+   export const evaluateNewEvent = async (
+      req: CustomRequest,
+      res: Response
+   ): Promise<void> => {
+      let connection;
+
+      try {
+         connection = await OracleDB.getConnection(dbConfig);
+
+         const eAvaliar = req.get("avaliar");
+         const eTitulo = req.get("titulo");
+         const eEmail = req.get("email");
+         const ePassword = req.get("password");
+
+         // const selectSql: string = `
+         // SELECT TITULO as 'titulo' FROM  EVENTS WHERE STATUS = 'awaiting approval'
+         // `;
+
+         const updateSql = `
+         UPDATE EVENTS 
+         SET STATUS = 'approved' 
+         WHERE TITULO = :titulo
+         `;
+
+         if (eEmail && ePassword && req.account) {
+            if (req.account.role == "moderador") {
+               if (eAvaliar == "aprovado") {
+                  await connection.execute(updateSql, [eTitulo], {
+                     autoCommit: true,
+                  });
+                  res.status(200).send({
+                     code: res.statusCode,
+                     msg: "Evento Aprovado com Sucesso!",
+                  });
+               } else if (eAvaliar == "reprovado") {
+                  const email: boolean = await sendEmail(
+                     "lucasdecamposranzani@gmail.com",
+                     "Aviso de Reprovação de Evento",
+                     `Prezado(a) Usuario(a), \nesperamos que esta mensagem o(a) encontre bem; \ninformamos que seu evento, intitulado ${eTitulo} , foi reprovado em nosso sistema de avaliação, possivelmente por não conformidades com os critérios estabelecidos para aprovação; \na reprovação, no entanto, não impede que você o reenvie após ajustes, e recomendamos revisar as diretrizes de nossos eventos para garantir alinhamento; \nagradecemos sua compreensão e esperamos continuar colaborando com você. \nAtenciosamente, Equipe de Avaliação de Eventos`
+                  );
+
+                  let msgEmail: string;
+                  if (email) {
+                     msgEmail = "E-mail de Reprovação enviado com sucesso!";
+                  } else {
+                     msgEmail = "Falha ao enviar e-mail de Reprovação!";
+                  }
+                  res.status(400).send({
+                     code: res.statusCode,
+                     msg: "Evento Reprovado!",
+                     msgEmail: msgEmail,
+                  });
+               }
+            } else {
+               res.status(400).send({
+                  code: res.statusCode,
+                  msg: "Acesso negado, você não é moderador",
+               });
+            }
+         }
+      } catch (err) {
+         console.log(err);
+      } finally {
+         if (connection) {
+            try {
+               await connection.close();
+            } catch (err) {
+               console.log(err);
             }
          }
       }
