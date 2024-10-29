@@ -52,6 +52,11 @@ routes.delete("/deleteEvent",
   AccountsHandler.verifyToken,
   EventHandler.deleteEvent);
 
+routes.put("/evaluateNewEvent",
+  AccountsHandler.verifyToken,
+  EventHandler.evaluateNewEvent
+);
+
 routes.put(
   "/addFunds", 
     AccountsHandler.verifyToken,
