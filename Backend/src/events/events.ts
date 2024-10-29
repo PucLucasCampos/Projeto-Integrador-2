@@ -1,4 +1,4 @@
-import { Request, RequestHandler, Response } from "express";
+import e, { Request, RequestHandler, Response } from "express";
 import OracleDB from "oracledb";
 import { dbConfig } from "../dbConfig";
 import { CustomRequest } from "../types";
@@ -58,7 +58,7 @@ export namespace EventHandler {
             eParam == "already occurred" ||
             eParam == "futures" ||
             eParam == "deleted" ||
-            eParam == "approved" 
+            eParam == "approved"
          ) {
             const result: Event[] | unknown = (await connection.execute(sql, [eParam]))
                .rows;
@@ -173,29 +173,20 @@ export namespace EventHandler {
       try {
          connection = await OracleDB.getConnection(dbConfig);
 
-         const eTitulo = req.get("titulo");
-         const eEmail = req.get("email");
-         const ePassword = req.get("password");
+         const eId = req.get("id");
 
-         const selectSql = `
-            SELECT * FROM EVENTS WHERE TITULO = :titulo 
-         `;
+         const event = await checkEvent(eId);
 
          const updateSql = `
             UPDATE EVENTS
             SET status = 'deleted'
-            WHERE titulo = :titulo
+            WHERE ID = :eId
          `;
 
-         if (eEmail && ePassword && eTitulo && req.account) {
+         if (eId && req.account) {
             if (req.account.role == "moderador") {
-               //Verificar se ele nao foi aprovado
-               //Verificar se ele nao tem aposta
-               const resultSelect = await connection.execute(selectSql, [eTitulo], {
-                  autoCommit: true,
-               });
-               if (resultSelect.rows && resultSelect.rows.length > 0) {
-                  await connection.execute(updateSql, [eTitulo], {
+               if (event && event.length > 0) {
+                  await connection.execute(updateSql, [eId], {
                      autoCommit: true,
                   });
                   res.status(200).send({
@@ -238,47 +229,50 @@ export namespace EventHandler {
          connection = await OracleDB.getConnection(dbConfig);
 
          const eAvaliar = req.get("avaliar");
-         const eTitulo = req.get("titulo");
-         const eEmail = req.get("email");
-         const ePassword = req.get("password");
+         const eId = req.get("id");
 
-         // const selectSql: string = `
-         // SELECT TITULO as 'titulo' FROM  EVENTS WHERE STATUS = 'awaiting approval'
-         // `;
+         const event = await checkEvent(eId);
 
          const updateSql = `
          UPDATE EVENTS 
          SET STATUS = 'approved' 
-         WHERE TITULO = :titulo
+         WHERE ID = :eId
          `;
 
-         if (eEmail && ePassword && req.account) {
+         if (req.account) {
             if (req.account.role == "moderador") {
-               if (eAvaliar == "aprovado") {
-                  await connection.execute(updateSql, [eTitulo], {
-                     autoCommit: true,
-                  });
-                  res.status(200).send({
-                     code: res.statusCode,
-                     msg: "Evento Aprovado com Sucesso!",
-                  });
-               } else if (eAvaliar == "reprovado") {
-                  const email: boolean = await sendEmail(
-                     "lucasdecamposranzani@gmail.com",
-                     "Aviso de Reprovação de Evento",
-                     `Prezado(a) Usuario(a), \nesperamos que esta mensagem o(a) encontre bem; \ninformamos que seu evento, intitulado ${eTitulo} , foi reprovado em nosso sistema de avaliação, possivelmente por não conformidades com os critérios estabelecidos para aprovação; \na reprovação, no entanto, não impede que você o reenvie após ajustes, e recomendamos revisar as diretrizes de nossos eventos para garantir alinhamento; \nagradecemos sua compreensão e esperamos continuar colaborando com você. \nAtenciosamente, Equipe de Avaliação de Eventos`
-                  );
+               if (event && event.length > 0) {
+                  if (eAvaliar == "aprovado") {
+                     await connection.execute(updateSql, [eId], {
+                        autoCommit: true,
+                     });
+                     res.status(200).send({
+                        code: res.statusCode,
+                        msg: "Evento Aprovado com Sucesso!",
+                     });
+                  } else if (eAvaliar == "reprovado") {
+                     const email: boolean = await sendEmail(
+                        req.account.email,
+                        "Aviso de Reprovação de Evento",
+                        `Prezado(a) Usuario(a), \nesperamos que esta mensagem o(a) encontre bem; \ninformamos que seu evento, intitulado ${event[0].titulo}, foi reprovado em nosso sistema de avaliação, possivelmente por não conformidades com os critérios estabelecidos para aprovação; \na reprovação, no entanto, não impede que você o reenvie após ajustes, e recomendamos revisar as diretrizes de nossos eventos para garantir alinhamento; \nagradecemos sua compreensão e esperamos continuar colaborando com você. \nAtenciosamente, Equipe de Avaliação de Eventos`
+                     );
 
-                  let msgEmail: string;
-                  if (email) {
-                     msgEmail = "E-mail de Reprovação enviado com sucesso!";
-                  } else {
-                     msgEmail = "Falha ao enviar e-mail de Reprovação!";
+                     let msgEmail: string;
+                     if (email) {
+                        msgEmail = "E-mail de Reprovação enviado com sucesso!";
+                     } else {
+                        msgEmail = "Falha ao enviar e-mail de Reprovação!";
+                     }
+                     res.status(400).send({
+                        code: res.statusCode,
+                        msg: "Evento Reprovado!",
+                        msgEmail: msgEmail,
+                     });
                   }
+               } else {
                   res.status(400).send({
                      code: res.statusCode,
-                     msg: "Evento Reprovado!",
-                     msgEmail: msgEmail,
+                     msg: "Evento não existe",
                   });
                }
             } else {
@@ -300,4 +294,29 @@ export namespace EventHandler {
          }
       }
    };
+
+   async function checkEvent(eId: string | undefined) {
+      let connection;
+
+      try {
+         connection = await OracleDB.getConnection(dbConfig);
+
+         const sql: string = `
+         SELECT * FROM EVENTS WHERE ID = :eId 
+         `;
+
+         const result = (await connection.execute(sql, [eId])).rows as Event[];
+         return result;
+      } catch (err) {
+         console.log(err);
+      } finally {
+         if (connection) {
+            try {
+               await connection.close();
+            } catch (err) {
+               console.log(err);
+            }
+         }
+      }
+   }
 }
