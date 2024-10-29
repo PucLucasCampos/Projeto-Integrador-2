@@ -2,6 +2,8 @@ import { Request, RequestHandler, Response } from "express";
 import OracleDB from "oracledb";
 import { dbConfig } from "../dbConfig";
 import { CustomRequest } from "../types";
+import { AccountsHandler } from "../accounts/accounts";
+import { resolve } from "path";
 
 export namespace EventHandler {
    /**
@@ -49,7 +51,7 @@ export namespace EventHandler {
          LEFT JOIN 
             EVENTS E ON B.eventoID = E.ID
          WHERE 
-            E.status = :param;
+            E.status = :param
          `;
 
          if (
@@ -105,7 +107,7 @@ export namespace EventHandler {
             connection = await OracleDB.getConnection(dbConfig);
 
             let cota = valorCota ? valorCota : 0;
-            const account = req.account
+            const account = req.account;
 
             const sql: string = `
                     INSERT INTO EVENTS
@@ -161,12 +163,53 @@ export namespace EventHandler {
       }
    };
 
-   export const deleteEvent = async (req: Request, res: Response): Promise<void> => {
+   export const deleteEvent = async (
+      req: CustomRequest,
+      res: Response
+   ): Promise<void> => {
       let connection;
 
       try {
+         connection = await OracleDB.getConnection(dbConfig);
+
+         const eTitulo = req.get("titulo");
+         const eEmail = req.get("email");
+         const ePassword = req.get("password");
+
+         const sql = `
+            UPDATE EVENTS
+            SET status = 'deleted'
+            WHERE titulo = :titulo
+         `;
+
+         if (eEmail && ePassword && eTitulo && req.account) {
+            if (req.account.role == "moderador") {
+               //Verificar se ele nao foi aprovado
+               //Verificar se ele nao tem aposta
+               const result = await connection.execute(sql, [eTitulo], {
+                  autoCommit: true,
+               });
+               res.status(200).send({
+                  code: res.statusCode,
+                  msg: "Evento deletado com sucesso",
+               })
+            } else {
+               res.status(400).send({
+                  code: res.statusCode,
+                  msg: "Acesso negado, você não é moderador",
+               })
+            }
+         }
       } catch (err) {
+         console.error(err);
       } finally {
+         if (connection) {
+            try {
+               await connection.close();
+            } catch (err) {
+               console.error(err);
+            }
+         }
       }
    };
 }
