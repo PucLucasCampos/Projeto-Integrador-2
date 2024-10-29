@@ -1,9 +1,10 @@
-import { Request, RequestHandler, Response } from "express";
+import e, { Request, RequestHandler, Response } from "express";
 import OracleDB from "oracledb";
 import { dbConfig } from "../dbConfig";
 import { CustomRequest } from "../types";
 import { AccountsHandler } from "../accounts/accounts";
 import { resolve } from "path";
+import { sendEmail } from "../utils";
 
 export namespace EventHandler {
    /**
@@ -30,34 +31,34 @@ export namespace EventHandler {
 
          const sql: string = `
          SELECT 
-            A.ID AS accountID, 
-            A.EMAIL, 
-            A.NAME, 
-            A.BIRTHDAY, 
-            B.ID AS betID, 
-            B.valor AS betValue, 
-            E.ID AS eventID, 
-            E.titulo AS eventTitle, 
-            E.descricao AS eventDescription, 
-            E.valorCota, 
-            E.dataInicio, 
-            E.dataFim, 
-            E.dataCriacao, 
-            E.status
-         FROM 
-            ACCOUNTS A
-         LEFT JOIN 
-            BETS B ON A.ID = B.accountsID
-         LEFT JOIN 
-            EVENTS E ON B.eventoID = E.ID
+            E.ID AS "id",
+            E.TITULO AS "titulo",
+            E.DESCRICAO AS "descricao",
+            E.VALORCOTA AS "valorCota",
+            E.DATAINICIO AS "dataInicio",
+            E.DATAFIM AS "dataFim",
+            E.STATUS AS "status",
+            A.ID AS "accountId",
+            A.NAME AS "name",
+            A.EMAIL AS "email",
+            B.ID AS "betId",
+            COALESCE(SUM(B.VALOR), 0) AS "valorApostado"
+         FROM EVENTS E
+            JOIN ACCOUNTS A ON A.ID = E.ACCOUNTSID
+            LEFT JOIN BETS B ON B.ID = E.ID
          WHERE 
-            E.status = :param
+            E.STATUS = :param
+         GROUP BY 
+            E.ID, E.TITULO, E.DESCRICAO, E.VALORCOTA, E.DATAINICIO, E.DATAFIM, E.STATUS,
+            A.ID, A.NAME, A.EMAIL, B.ID
          `;
 
          if (
             eParam == "awaiting approval" ||
             eParam == "already occurred" ||
-            eParam == "futures"
+            eParam == "futures" ||
+            eParam == "deleted" ||
+            eParam == "approved"
          ) {
             const result: Event[] | unknown = (await connection.execute(sql, [eParam]))
                .rows;
@@ -172,32 +173,37 @@ export namespace EventHandler {
       try {
          connection = await OracleDB.getConnection(dbConfig);
 
-         const eTitulo = req.get("titulo");
-         const eEmail = req.get("email");
-         const ePassword = req.get("password");
+         const eId = req.get("id");
 
-         const sql = `
+         const event = await checkEvent(eId);
+
+         const updateSql = `
             UPDATE EVENTS
             SET status = 'deleted'
-            WHERE titulo = :titulo
+            WHERE ID = :eId
          `;
 
-         if (eEmail && ePassword && eTitulo && req.account) {
+         if (eId && req.account) {
             if (req.account.role == "moderador") {
-               //Verificar se ele nao foi aprovado
-               //Verificar se ele nao tem aposta
-               const result = await connection.execute(sql, [eTitulo], {
-                  autoCommit: true,
-               });
-               res.status(200).send({
-                  code: res.statusCode,
-                  msg: "Evento deletado com sucesso",
-               })
+               if (event && event.length > 0) {
+                  await connection.execute(updateSql, [eId], {
+                     autoCommit: true,
+                  });
+                  res.status(200).send({
+                     code: res.statusCode,
+                     msg: "Evento deletado com sucesso",
+                  });
+               } else {
+                  res.status(400).send({
+                     code: res.statusCode,
+                     msg: "Evento não existe",
+                  });
+               }
             } else {
                res.status(400).send({
                   code: res.statusCode,
                   msg: "Acesso negado, você não é moderador",
-               })
+               });
             }
          }
       } catch (err) {
@@ -212,4 +218,105 @@ export namespace EventHandler {
          }
       }
    };
+
+   export const evaluateNewEvent = async (
+      req: CustomRequest,
+      res: Response
+   ): Promise<void> => {
+      let connection;
+
+      try {
+         connection = await OracleDB.getConnection(dbConfig);
+
+         const eAvaliar = req.get("avaliar");
+         const eId = req.get("id");
+
+         const event = await checkEvent(eId);
+
+         const updateSql = `
+         UPDATE EVENTS 
+         SET STATUS = 'approved' 
+         WHERE ID = :eId
+         `;
+
+         if (req.account) {
+            if (req.account.role == "moderador") {
+               if (event && event.length > 0) {
+                  if (eAvaliar == "aprovado") {
+                     await connection.execute(updateSql, [eId], {
+                        autoCommit: true,
+                     });
+                     res.status(200).send({
+                        code: res.statusCode,
+                        msg: "Evento Aprovado com Sucesso!",
+                     });
+                  } else if (eAvaliar == "reprovado") {
+                     const email: boolean = await sendEmail(
+                        req.account.email,
+                        "Aviso de Reprovação de Evento",
+                        `Prezado(a) Usuario(a), \nesperamos que esta mensagem o(a) encontre bem; \ninformamos que seu evento, intitulado ${event[0].titulo}, foi reprovado em nosso sistema de avaliação, possivelmente por não conformidades com os critérios estabelecidos para aprovação; \na reprovação, no entanto, não impede que você o reenvie após ajustes, e recomendamos revisar as diretrizes de nossos eventos para garantir alinhamento; \nagradecemos sua compreensão e esperamos continuar colaborando com você. \nAtenciosamente, Equipe de Avaliação de Eventos`
+                     );
+
+                     let msgEmail: string;
+                     if (email) {
+                        msgEmail = "E-mail de Reprovação enviado com sucesso!";
+                     } else {
+                        msgEmail = "Falha ao enviar e-mail de Reprovação!";
+                     }
+                     res.status(400).send({
+                        code: res.statusCode,
+                        msg: "Evento Reprovado!",
+                        msgEmail: msgEmail,
+                     });
+                  }
+               } else {
+                  res.status(400).send({
+                     code: res.statusCode,
+                     msg: "Evento não existe",
+                  });
+               }
+            } else {
+               res.status(400).send({
+                  code: res.statusCode,
+                  msg: "Acesso negado, você não é moderador",
+               });
+            }
+         }
+      } catch (err) {
+         console.log(err);
+      } finally {
+         if (connection) {
+            try {
+               await connection.close();
+            } catch (err) {
+               console.log(err);
+            }
+         }
+      }
+   };
+
+   async function checkEvent(eId: string | undefined) {
+      let connection;
+
+      try {
+         connection = await OracleDB.getConnection(dbConfig);
+
+         const sql: string = `
+         SELECT * FROM EVENTS WHERE ID = :eId 
+         `;
+
+         const result = (await connection.execute(sql, [eId])).rows as Event[];
+         return result;
+      } catch (err) {
+         console.log(err);
+      } finally {
+         if (connection) {
+            try {
+               await connection.close();
+            } catch (err) {
+               console.log(err);
+            }
+         }
+      }
+   }
 }

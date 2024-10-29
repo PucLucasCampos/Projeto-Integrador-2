@@ -51,6 +51,11 @@ routes.delete("/deleteEvent",
   AccountsHandler.verifyToken,
   EventHandler.deleteEvent);
 
+routes.put("/evaluateNewEvent",
+  AccountsHandler.verifyToken,
+  EventHandler.evaluateNewEvent
+);
+
 server.use(routes);
 
 server.listen(port, () => {
