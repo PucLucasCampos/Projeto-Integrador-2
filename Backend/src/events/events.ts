@@ -350,7 +350,7 @@ export namespace EventHandler {
          const searchParam = req.query.search as string; 
   
          if (!searchParam || searchParam.trim() === "") {
-            return res.status(400).send({ //aqui da erro nao sei pq, me ajuda
+            return res.status(400).send({
                code: 400,
                msg: "O parâmetro de busca é obrigatório.",
             });
