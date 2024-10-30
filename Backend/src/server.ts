@@ -56,7 +56,6 @@ routes.put(
   "/addFunds", 
     AccountsHandler.verifyToken,
     WalletHandler.addFundsHandler
-);
 
 routes.put(
   "/withdrawFunds", 
@@ -70,6 +69,10 @@ routes.post(
   WalletHandler.betOnEventHandler
 );
 
+routes.put("/searchEvent",
+  AccountsHandler.verifyToken,
+  EventHandler.searchEvent);
+  
 server.use(routes);
 
 server.listen(port, () => {
