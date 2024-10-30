@@ -18,7 +18,7 @@ export namespace EventHandler {
       dataInicio: Date;
       dataFim: Date;
       data: Date;
-      status: boolean;
+      status: string;
    };
 
    export const getAllEvents = async (req: Request, res: Response): Promise<void> => {
@@ -56,7 +56,6 @@ export namespace EventHandler {
          if (
             eParam == "awaiting approval" ||
             eParam == "already occurred" ||
-            eParam == "futures" ||
             eParam == "deleted" ||
             eParam == "approved"
          ) {
@@ -239,57 +238,117 @@ export namespace EventHandler {
          WHERE ID = :eId
          `;
 
-         if (req.account) {
-            if (req.account.role == "moderador") {
-               if (event && event.length > 0) {
-                  if (eAvaliar == "aprovado") {
-                     await connection.execute(updateSql, [eId], {
-                        autoCommit: true,
-                     });
-                     res.status(200).send({
-                        code: res.statusCode,
-                        msg: "Evento Aprovado com Sucesso!",
-                     });
-                  } else if (eAvaliar == "reprovado") {
-                     const email: boolean = await sendEmail(
-                        req.account.email,
-                        "Aviso de Reprovação de Evento",
-                        `Prezado(a) Usuario(a), \nesperamos que esta mensagem o(a) encontre bem; \ninformamos que seu evento, intitulado ${event[0].titulo}, foi reprovado em nosso sistema de avaliação, possivelmente por não conformidades com os critérios estabelecidos para aprovação; \na reprovação, no entanto, não impede que você o reenvie após ajustes, e recomendamos revisar as diretrizes de nossos eventos para garantir alinhamento; \nagradecemos sua compreensão e esperamos continuar colaborando com você. \nAtenciosamente, Equipe de Avaliação de Eventos`
-                     );
+         if (req.account && req.account.role == "moderador") {
+            if (event && event.length > 0) {
+               if (eAvaliar == "aprovado") {
+                  await connection.execute(updateSql, [eId], {
+                     autoCommit: true,
+                  });
+                  res.status(200).send({
+                     code: res.statusCode,
+                     msg: "Evento Aprovado com Sucesso!",
+                  });
+               } else if (eAvaliar == "reprovado") {
+                  const email: boolean = await sendEmail(
+                     req.account.email,
+                     "Aviso de Reprovação de Evento",
+                     `Prezado(a) Usuario(a), \nesperamos que esta mensagem o(a) encontre bem; \ninformamos que seu evento, intitulado ${event[0].titulo}, foi reprovado em nosso sistema de avaliação, possivelmente por não conformidades com os critérios estabelecidos para aprovação; \na reprovação, no entanto, não impede que você o reenvie após ajustes, e recomendamos revisar as diretrizes de nossos eventos para garantir alinhamento; \nagradecemos sua compreensão e esperamos continuar colaborando com você. \nAtenciosamente, Equipe de Avaliação de Eventos`
+                  );
 
-                     let msgEmail: string;
-                     if (email) {
-                        msgEmail = "E-mail de Reprovação enviado com sucesso!";
-                     } else {
-                        msgEmail = "Falha ao enviar e-mail de Reprovação!";
-                     }
-                     res.status(400).send({
-                        code: res.statusCode,
-                        msg: "Evento Reprovado!",
-                        msgEmail: msgEmail,
-                     });
+                  let msgEmail: string;
+                  if (email) {
+                     msgEmail = "E-mail de Reprovação enviado com sucesso!";
+                  } else {
+                     msgEmail = "Falha ao enviar e-mail de Reprovação!";
                   }
-               } else {
                   res.status(400).send({
                      code: res.statusCode,
-                     msg: "Evento não existe",
+                     msg: "Evento Reprovado!",
+                     msgEmail: msgEmail,
                   });
                }
             } else {
                res.status(400).send({
                   code: res.statusCode,
-                  msg: "Acesso negado, você não é moderador",
+                  msg: "Evento não existe",
                });
             }
+         } else {
+            res.status(400).send({
+               code: res.statusCode,
+               msg: "Acesso negado, você não é moderador",
+            });
          }
       } catch (err) {
-         console.log(err);
+         console.error(err);
       } finally {
          if (connection) {
             try {
                await connection.close();
             } catch (err) {
-               console.log(err);
+               console.error(err);
+            }
+         }
+      }
+   };
+
+   export const finishEvent = async (
+      req: CustomRequest,
+      res: Response
+   ): Promise<void> => {
+      let connection;
+
+      try {
+         connection = await OracleDB.getConnection(dbConfig);
+
+         const eId = req.get("eventId");
+
+         const event = await checkEvent(eId);
+
+         const sql: string = `
+         UPDATE EVENTS 
+         SET STATUS = 'closed' 
+         WHERE ID = :eId
+         `;
+
+         if (req.account && req.account.role == "moderador") {
+            if (event && event.length > 0) {
+               const data = new Date()
+               let dataFim = event[0].dataFim;
+
+               if (data > dataFim) {
+                  await connection.execute(sql, [eId], { autoCommit: true });
+
+                  res.status(200).send({
+                     code: res.statusCode,
+                     msg: "Evento Finalizado",
+                  });
+               } else {
+                  res.status(400).send({
+                     code: res.statusCode,
+                     msg: `Não foi possivel encerrar o evento, encerrarmento somente depois da data ${dataFim.toLocaleDateString()}`,
+                  });
+               }
+            } else {
+               res.status(400).send({
+                  code: res.statusCode,
+                  msg: "Evento não existe",
+               });
+            }
+         } else {
+            res.status(400).send({
+               code: res.statusCode,
+               msg: "Acesso negado, você não é moderador",
+            });
+         }
+      } catch (err) {
+         console.error(err);
+      } finally {
+         if (connection) {
+            try {
+               await connection.close();
+            } catch (err) {
+               console.error(err);
             }
          }
       }
@@ -302,10 +361,22 @@ export namespace EventHandler {
          connection = await OracleDB.getConnection(dbConfig);
 
          const sql: string = `
-         SELECT * FROM EVENTS WHERE ID = :eId 
+         SELECT 
+            ID as "id",
+            TITULO as "titulo",
+            DESCRICAO as "descricao",
+            VALORCOTA as "valorCota",
+            DATAINICIO as "dataInicio",
+            DATAFIM as "dataFim",
+            DATACRIACAO "dataCriacao",
+            STATUS as "status",
+            ACCOUNTSID as "accountId"
+         FROM EVENTS WHERE ID = :eId 
          `;
 
          const result = (await connection.execute(sql, [eId])).rows as Event[];
+         console.log(result);
+         console.log(result[0].dataFim);
          return result;
       } catch (err) {
          console.log(err);
