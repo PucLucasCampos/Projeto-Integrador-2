@@ -69,8 +69,10 @@ routes.put(
     WalletHandler.withdrawFundsHandler
 );
 
-routes.put(
-  "/betOnEvent"
+routes.post(
+  "/betOnEvent",
+  AccountsHandler.verifyToken,
+  WalletHandler.betOnEventHandler
 );
 
 server.use(routes);
