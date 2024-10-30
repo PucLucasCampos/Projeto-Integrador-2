@@ -320,27 +320,6 @@ export namespace EventHandler {
       }
    }
 
-   export const finishEvent = async (req: Request, res: Response): Promise<void> => {
-      let connection;
-
-      try{
-         connection = await OracleDB.getConnection(dbConfig);
-
-         const eId = req.get("id");
-         
-      }catch (err) {
-         console.log(err);
-      } finally {
-         if (connection) {
-            try {
-               await connection.close();
-            } catch (err) {
-               console.log(err);
-            }
-         }
-      }
-   }
-
    export const searchEvent = async (req: Request, res: Response): Promise<void> => {
       let connection;
   
@@ -350,7 +329,7 @@ export namespace EventHandler {
          const searchParam = req.query.search as string; 
   
          if (!searchParam || searchParam.trim() === "") {
-            return res.status(400).send({
+            res.status(400).send({
                code: 400,
                msg: "O parâmetro de busca é obrigatório.",
             });

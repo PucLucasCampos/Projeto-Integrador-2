@@ -61,6 +61,7 @@ routes.put("/evaluateNewEvent",
 routes.put("/searchEvent",
   AccountsHandler.verifyToken,
   EventHandler.searchEvent);
+  
 server.use(routes);
 
 server.listen(port, () => {
