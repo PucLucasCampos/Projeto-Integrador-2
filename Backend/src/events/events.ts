@@ -319,4 +319,85 @@ export namespace EventHandler {
          }
       }
    }
+
+   export const finishEvent = async (req: Request, res: Response): Promise<void> => {
+      let connection;
+
+      try{
+         connection = await OracleDB.getConnection(dbConfig);
+
+         const eId = req.get("id");
+         
+      }catch (err) {
+         console.log(err);
+      } finally {
+         if (connection) {
+            try {
+               await connection.close();
+            } catch (err) {
+               console.log(err);
+            }
+         }
+      }
+   }
+
+   export const searchEvent = async (req: Request, res: Response): Promise<void> => {
+      let connection;
+  
+      try {
+         connection = await OracleDB.getConnection(dbConfig);
+  
+         const searchParam = req.query.search as string; 
+  
+         if (!searchParam || searchParam.trim() === "") {
+            return res.status(400).send({ //aqui da erro nao sei pq, me ajuda
+               code: 400,
+               msg: "O parâmetro de busca é obrigatório.",
+            });
+         }
+  
+         const sql: string = `
+            SELECT 
+               E.ID AS "id",
+               E.TITULO AS "titulo",
+               E.DESCRICAO AS "descricao",
+               E.VALORCOTA AS "valorCota",
+               E.DATAINICIO AS "dataInicio",
+               E.DATAFIM AS "dataFim",
+               E.STATUS AS "status"
+            FROM EVENTS E
+            WHERE 
+               LOWER(E.TITULO) LIKE '%' || :search || '%' 
+               OR LOWER(E.DESCRICAO) LIKE '%' || :search || '%'
+             `;
+  
+         const result = await connection.execute(sql, {
+            search: searchParam.toLowerCase(),
+         });
+  
+         if (result.rows && result.rows.length > 0) {
+            res.status(200).send({
+               code: 200,
+               msg: "Eventos encontrados",
+               events: result.rows,
+            });
+         } else {
+            res.status(404).send({
+               code: 404,
+               msg: "Nenhum evento encontrado para o termo buscado.",
+            });
+          
+      }
+   } catch (err) {
+      console.log(err);
+      }finally {
+         if (connection) {
+            try {
+               await connection.close();
+            } catch (err) {
+               console.log(err);
+            }
+         }
+      }
+   }
 }
