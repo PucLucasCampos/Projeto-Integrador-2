@@ -186,102 +186,70 @@ export namespace WalletHandler {
     }
   };
 
-  // async function betOnEvent(
-  //   userId: string,
-  //   evento: string,
-  //   valorAposta: number
-  // ): Promise<boolean> {
-  //   let connection;
+  async function betOnEvent(
+    userId: string,
+    evento: string,
+    valorAposta: number
+  ): Promise<boolean> {
+    let connection;
 
-  //   try {
-  //     connection = await OracleDB.getConnection(dbConfig);
+    try {
+      connection = await OracleDB.getConnection(dbConfig);
 
-  //     const sql: string = `
-  //       SELECT ID FROM ACCOUNT WHERE ID = :userId
-  //     `;
+      const sql: string = `
+        SELECT ID, saldo FROM WALLET WHERE ID = :userId
+      `;
 
-  //     const result = (
-  //       await connection.execute(sql, [userId])
-  //     ).rows;
+      const result = (
+        await connection.execute(sql, [userId])
+      ).rows;
 
-  //     if (result && result.length > 0) {
-  //       return true;
-  //     } else {
-  //       return false;
-  //     }
+      if (result && result.length > 0) {
+        return true;
+      } else {
+        return false;
+      }
 
-  //   } catch (err) {
-  //     console.error(err);
-  //   } finally {
-  //     if (connection) {
-  //       try {
-  //         await connection.close();
-  //       } catch (err) {
-  //         console.error(err);
-  //       }
-  //     }
-  //   }
+      // const saldoAtual = parseFloat(result.rows[0]?.[0]);
+      // if (saldoAtual && (saldoAtual < valorAposta)) {
+      //   return false;
+      // }
 
-  //   return false;
-  // }
+      // await connection.execute(
+      //   `UPDATE WALLET SET SALDO = SALDO - :valorAposta WHERE USER_ID = :userId`,
+      //   [valorAposta, userId],
+      //   { autoCommit: true }
+      // );
 
-  // async function apostarEmEvento(
-  //   emailApostador: string,
-  //   evento: string,
-  //   valorAposta: number
-  // ): Promise<boolean> {
-  //   let connection;
-  //   try {
-  //     // Conectar ao banco
-  //     connection = await OracleDB.getConnection(dbConfig);
+      // await connection.execute(
+      //   `INSERT INTO BETS (valor, eventoID, accountsID) 
+      //    VALUES (:valorAposta, :evento, :userId)`,
+      //   [valorAposta, evento, userId],
+      //   { autoCommit: true }
+      // );
 
-  //     // Buscar ID do usuário a partir do email na tabela ACCOUNT
-  //     const accountResult = await connection.execute(
-  //       `SELECT ID FROM ACCOUNT WHERE EMAIL = :email`,
-  //       [emailApostador]
-  //     );
-  //     const userId = accountResult.rows[0]?.[0];
-  //     if (!userId) return false;
+    } catch (err) {
+      console.error(err);
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
 
-  //     // Verificar o saldo na tabela WALLET usando o ID do usuário
-  //     const walletResult = await connection.execute(
-  //       `SELECT SALDO FROM WALLET WHERE USER_ID = :userId`,
-  //       [userId]
-  //     );
-  //     const saldoAtual = parseFloat(walletResult.rows[0]?.[0]);
-  //     if (isNaN(saldoAtual) || saldoAtual < valorAposta) return false;
+    return false;
+  }
 
-  //     // Atualizar o saldo na tabela WALLET
-  //     await connection.execute(
-  //       `UPDATE WALLET SET SALDO = SALDO - :valorAposta WHERE USER_ID = :userId`,
-  //       [valorAposta, userId],
-  //       { autoCommit: true }
-  //     );
-
-  //     // Registrar a aposta na tabela APOSTAS
-  //     await connection.execute(
-  //       `INSERT INTO APOSTAS (USER_ID, EVENTO, VALOR_APOSTADO, DATA_APOSTA) 
-  //        VALUES (:userId, :evento, :valorAposta, SYSDATE)`,
-  //       [userId, evento, valorAposta],
-  //       { autoCommit: true }
-  //     );
-
-  //     return true;
-  //   } catch {
-  //     return false;
-  //   } finally {
-  //     connection && (await connection.close());
-  //   }
-  // }
-
-  // // Handler para a rota de aposta
-  // export const apostarEventoHandler: RequestHandler = async (req, res) => {
-  //   const { email, evento, valorAposta } = req.body;
-  //   if (!email || !evento || !valorAposta || valorAposta <= 0) {
+  // export const betOnEventHandler: RequestHandler = async (req, res) => {
+  //   const { userId, evento, valorAposta } = req.body;
+  //   if (!userId || !evento || !valorAposta || valorAposta <= 0) {
   //     return res.status(400).send({ msg: "Parâmetros inválidos" });
   //   }
 
-  //   const sucesso = await apostarEmEvento(email, evento, Number(valorAposta));
+  //   const sucesso = await betOnEvent(userId, evento, Number(valorAposta));
   //   res.status(sucesso ? 200 : 500).send({
   //     msg: sucesso ? "Aposta realizada com sucesso!" : "Erro ao processar aposta",
   //   });
