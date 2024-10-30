@@ -11,8 +11,8 @@ export namespace WalletHandler {
   };
 
   async function addFundsWallet(
-    userId: number,
-    valorAdd: number
+    valorAdd: number,
+    walletId: number
   ): Promise<boolean> {
     let connection;
 
@@ -20,9 +20,9 @@ export namespace WalletHandler {
       connection = await OracleDB.getConnection(dbConfig);
 
       const sql: string = `
-        UPDATE WALLETS 
+        UPDATE WALLET
         SET SALDO = SALDO + :valorAdd 
-        WHERE USER_ID = :userId
+        WHERE ID = :walletId
       `;
 
       // const sql: string = `
@@ -32,13 +32,13 @@ export namespace WalletHandler {
       // `;
 
       const result = (
-        await connection.execute(sql, [valorAdd, userId], { autoCommit: true })
-      ).rows;
+        await connection.execute(sql, [valorAdd, walletId], {
+          autoCommit: true,
+        })
+      ).rowsAffected;
 
-      if (result && result.length > 0) {
+      if (result && result > 0) {
         return true;
-      } else {
-        return false;
       }
     } catch (err) {
       console.error(err);
@@ -59,22 +59,19 @@ export namespace WalletHandler {
     req: CustomRequest,
     res: Response
   ) => {
-    const wallet = req.get("walletId");
-    const userId = req.account?.id;
-    const valorAdd = req.get("valorId");
+    const valorAdd = req.get("valorAdd");
 
-    if (userId && valorAdd) {
-      const numUserId = Number(userId);
+    if (valorAdd && req.account?.walletId) {
+      const walletId = req.account.walletId;
 
-      if (numUserId <= 0 || Number(valorAdd) <= 0) {
+      if (Number(valorAdd) <= 0) {
         res.status(400).send({
           code: res.statusCode,
           msg: "Parametros invalidos",
         });
-        return;
       }
 
-      const success = await addFundsWallet(numUserId, Number(valorAdd));
+      const success = await addFundsWallet(Number(valorAdd), walletId);
 
       if (success) {
         res.status(200).send({
@@ -87,6 +84,11 @@ export namespace WalletHandler {
           msg: "Erro ao adicionar fundos.",
         });
       }
+    } else {
+      res.status(400).send({
+        code: res.statusCode,
+        msg: "Parametros invalidos",
+      });
     }
   };
 
@@ -101,7 +103,7 @@ export namespace WalletHandler {
   // }
 
   async function withdrawFundsWallet(
-    userId: number,
+    walletId: number,
     valorSacar: number
   ): Promise<boolean> {
     let connection;
@@ -120,21 +122,19 @@ export namespace WalletHandler {
       }
 
       const sql: string = `
-        UPDATE WALLETS 
+        UPDATE WALLET
         SET SALDO = SALDO - :valorSacar
-        WHERE USER_ID = :userId
+        WHERE ID = :walletId
       `;
 
       const result = (
-        await connection.execute(sql, [valorSacar, userId], {
+        await connection.execute(sql, [valorSacar, walletId], {
           autoCommit: true,
         })
-      ).rows;
+      ).rowsAffected;
 
-      if (result && result.length > 0) {
+      if (result && result > 0) {
         return true;
-      } else {
-        return false;
       }
     } catch (err) {
       console.error(err);
@@ -152,42 +152,45 @@ export namespace WalletHandler {
   }
 
   export const withdrawFundsHandler: RequestHandler = async (
-    req: Request,
+    req: CustomRequest,
     res: Response
   ) => {
-    const userId = req.get("userId");
     const valorSacar = req.get("valorSacar");
 
-    if (userId && valorSacar) {
-      const numUserId = Number(userId);
+    if (valorSacar && req.account?.walletId) {
+      const walletId = req.account.walletId;
 
-      if (numUserId <= 0 || Number(valorSacar) <= 0) {
+      if (Number(valorSacar) <= 0) {
         res.status(400).send({
           code: res.statusCode,
           msg: "Parametros invalidos",
         });
-        return;
       }
 
-      const success = await withdrawFundsWallet(numUserId, Number(valorSacar));
+      const success = await withdrawFundsWallet(walletId, Number(valorSacar));
 
       if (success) {
         res.status(200).send({
           code: res.statusCode,
-          msg: "Fundos adicionados com sucesso!",
+          msg: "Fundos retirados com sucesso!",
         });
       } else {
         res.status(500).send({
           code: res.statusCode,
-          msg: "Erro ao adicionar fundos.",
+          msg: "Erro ao retirar fundos.",
         });
       }
+    } else {
+      res.status(400).send({
+        code: res.statusCode,
+        msg: "Parametros invalidos",
+      });
     }
   };
 
   async function betOnEvent(
-    userId: string,
-    evento: string,
+    userId: number,
+    eventoId: number,
     valorAposta: number
   ): Promise<boolean> {
     let connection;
@@ -196,7 +199,7 @@ export namespace WalletHandler {
       connection = await OracleDB.getConnection(dbConfig);
 
       const sql: string = `
-        SELECT ID, saldo FROM WALLET WHERE ID = :userId
+        SELECT ID, saldo FROM WALLET WHERE USERID = :userId
       `;
 
       const result = (await connection.execute(sql, [userId])).rows as [
@@ -204,26 +207,29 @@ export namespace WalletHandler {
       ];
 
       if (result && result.length > 0) {
-        const saldoAtual = result[0].SALDO;
+        const wallet = result[0];
+
+        const saldoAtual = wallet.SALDO;
         if (saldoAtual && saldoAtual < valorAposta) {
           return false;
         }
 
-        await connection.execute(
-          `INSERT INTO BETS (ID, valor, eventoID, accountsID) 
-           VALUES (SEQ_ACCOUNTS.NEXTVAL, :valorAposta, :evento, :userId)`,
-          [valorAposta, evento, userId],
+        const resultAposta = await connection.execute(
+          `INSERT INTO BETS (ID, VALOR, EVENTOID, ACCOUNTSID)
+           VALUES (SEQ_ACCOUNTS.NEXTVAL, :valorAposta, :eventoId, :userId)`,
+          [valorAposta, eventoId, userId],
           { autoCommit: true }
         );
 
         await connection.execute(
-          `UPDATE WALLET SET SALDO = SALDO - :valorAposta WHERE USERID = :userId`,
-          [valorAposta, userId],
+          `UPDATE WALLET SET SALDO = SALDO - :valorAposta WHERE ID = :walletId`,
+          [valorAposta, wallet.ID],
           { autoCommit: true }
         );
 
-      } else {
-        return false;
+        if (resultAposta) {
+          return true;
+        }
       }
     } catch (err) {
       console.error(err);
@@ -240,19 +246,31 @@ export namespace WalletHandler {
     return false;
   }
 
-  export const betOnEventHandler: RequestHandler = async (req: Request, res: Response) => {
-    const { userId, evento, valorAposta } = req.body;
+  export const betOnEventHandler: RequestHandler = async (
+    req: CustomRequest,
+    res: Response
+  ) => {
+    const { eventoId, valorAposta } = req.body;
 
-    if (!userId || !evento || !valorAposta || valorAposta <= 0) {
-      res.status(400).send({ msg: "Parâmetros inválidos" });
+    const account = req.account;
+
+    if (eventoId && valorAposta && account) {
+      const sucesso = await betOnEvent(
+        account.id,
+        eventoId,
+        Number(valorAposta)
+      );
+
+      res.status(sucesso ? 200 : 500).send({
+        code: res.statusCode,
+        msg: sucesso
+          ? "Aposta realizada com sucesso!"
+          : "Erro ao processar aposta",
+      });
+    } else {
+      res
+        .status(400)
+        .send({ code: res.statusCode, msg: "Parâmetros inválidos" });
     }
-
-    const sucesso = await betOnEvent(userId, evento, Number(valorAposta));
-
-    res.status(sucesso ? 200 : 500).send({
-      msg: sucesso
-        ? "Aposta realizada com sucesso!"
-        : "Erro ao processar aposta",
-    });
   };
 }

@@ -64,7 +64,7 @@ routes.put(
 );
 
 routes.put(
-  "/withdrawFunds ", 
+  "/withdrawFunds", 
     AccountsHandler.verifyToken,
     WalletHandler.withdrawFundsHandler
 );
