@@ -198,7 +198,8 @@ export namespace WalletHandler {
   async function betOnEvent(
     userId: number,
     eventoId: number,
-    valorAposta: number
+    valorAposta: number,
+    choice: number
   ): Promise<boolean> {
     let connection;
 
@@ -222,9 +223,9 @@ export namespace WalletHandler {
         }
 
         const resultAposta = await connection.execute(
-          `INSERT INTO BETS (ID, VALOR, EVENTOID, ACCOUNTSID)
-           VALUES (SEQ_ACCOUNTS.NEXTVAL, :valorAposta, :eventoId, :userId)`,
-          [valorAposta, eventoId, userId],
+          `INSERT INTO BETS (ID, VALOR, CHOICE, EVENTOID, ACCOUNTSID)
+           VALUES (SEQ_ACCOUNTS.NEXTVAL, :valorAposta, :choice, :eventoId, :userId)`,
+          [valorAposta, choice, eventoId, userId],
           { autoCommit: true }
         );
 
@@ -260,15 +261,18 @@ export namespace WalletHandler {
     req: CustomRequest,
     res: Response
   ) => {
-    const { eventoId, valorAposta } = req.body;
+    const { eventoId, valorAposta, choice } = req.body;
 
     const account = req.account;
 
-    if (eventoId && valorAposta && account) {
+    if (eventoId && valorAposta && account && choice) {
+      const choiceBool: number = choice.toLowerCase() == "sim" ? 1 : 0
+
       const sucesso = await betOnEvent(
         account.id,
         eventoId,
-        Number(valorAposta)
+        Number(valorAposta),
+        choiceBool
       );
 
       res.status(sucesso ? 200 : 500).send({
