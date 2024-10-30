@@ -45,17 +45,22 @@ routes.post(
 );
 
 routes.get("/getEvents",
-  EventHandler.getAllEvents);
+  EventHandler.getAllEvents
+);
 
 routes.delete("/deleteEvent", 
   AccountsHandler.verifyToken,
-  EventHandler.deleteEvent);
+  EventHandler.deleteEvent
+);
 
 routes.put("/evaluateNewEvent",
   AccountsHandler.verifyToken,
   EventHandler.evaluateNewEvent
 );
 
+routes.put("/searchEvent",
+  AccountsHandler.verifyToken,
+  EventHandler.searchEvent);
 server.use(routes);
 
 server.listen(port, () => {
