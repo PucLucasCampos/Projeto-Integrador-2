@@ -4,12 +4,19 @@ import { dbConfig } from "../dbConfig";
 import { CustomRequest } from "../types";
 
 export namespace WalletHandler {
+
+  /*
+    Tipo UserWallet
+   */
   export type UserWallet = {
     id: number;
     userId: string;
     saldo: string;
   };
 
+  /*
+    Função para adicionar fundos a wallet
+   */
   async function addFundsWallet(
     valorAdd: number,
     walletId: number
@@ -24,12 +31,6 @@ export namespace WalletHandler {
         SET SALDO = SALDO + :valorAdd 
         WHERE ID = :walletId
       `;
-
-      // const sql: string = `
-      //   UPDATE historico_wallet
-      //   SET valorAdd = :valorAdd
-      //   WHERE USER_ID = :userId
-      // `;
 
       const result = (
         await connection.execute(sql, [valorAdd, walletId], {
@@ -55,6 +56,9 @@ export namespace WalletHandler {
     return false;
   }
 
+  /*
+   Função para lidar com a requisição de adição de fundos
+  */ 
   export const addFundsHandler: RequestHandler = async (
     req: CustomRequest,
     res: Response
@@ -92,16 +96,10 @@ export namespace WalletHandler {
     }
   };
 
-  // if (valorAdd <= 100) {
-  //   valorAdd -= valorAdd * 0.04;
-  // } else if (valorAdd <= 1000) {
-  //   valorAdd -= valorAdd * 0.03;
-  // } else if (valorAdd <= 5000) {
-  //   valorAdd -= valorAdd * 0.02;
-  // } else if (valorAdd <= 100000) {
-  //   valorAdd -= valorAdd * 0.01;
-  // }
-
+  /*
+    Função para sacar fundos da wallet
+    Lógica para taxa ao sacar
+   */
   async function withdrawFundsWallet(
     walletId: number,
     valorSacar: number
@@ -151,6 +149,9 @@ export namespace WalletHandler {
     return false;
   }
 
+  /*
+   Função para lidar com a requisição de retirada de fundos
+  */
   export const withdrawFundsHandler: RequestHandler = async (
     req: CustomRequest,
     res: Response
@@ -188,6 +189,12 @@ export namespace WalletHandler {
     }
   };
 
+  /*
+    Função para apostar em um evento
+    Verifica se o user tem saldo suficiente
+    caso tiver, o valor apostado é subtraido do saldo atual
+    e aposta é registrada
+   */
   async function betOnEvent(
     userId: number,
     eventoId: number,
@@ -246,6 +253,9 @@ export namespace WalletHandler {
     return false;
   }
 
+  /*
+   Função para lidar com a requisição de aposta em evento
+  */
   export const betOnEventHandler: RequestHandler = async (
     req: CustomRequest,
     res: Response
