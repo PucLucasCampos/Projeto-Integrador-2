@@ -18,8 +18,15 @@ export namespace EventHandler {
       dataInicio: Date;
       dataFim: Date;
       data: Date;
-      status: boolean;
+      status: string;
    };
+
+   type Apostarores = {
+      id: number
+      valor: number
+      accountId: number
+      choice: number
+   }
 
    export const getAllEvents = async (req: Request, res: Response): Promise<void> => {
       let connection;
@@ -56,7 +63,6 @@ export namespace EventHandler {
          if (
             eParam == "awaiting approval" ||
             eParam == "already occurred" ||
-            eParam == "futures" ||
             eParam == "deleted" ||
             eParam == "approved"
          ) {
@@ -239,57 +245,196 @@ export namespace EventHandler {
          WHERE ID = :eId
          `;
 
-         if (req.account) {
-            if (req.account.role == "moderador") {
-               if (event && event.length > 0) {
-                  if (eAvaliar == "aprovado") {
-                     await connection.execute(updateSql, [eId], {
-                        autoCommit: true,
-                     });
-                     res.status(200).send({
-                        code: res.statusCode,
-                        msg: "Evento Aprovado com Sucesso!",
-                     });
-                  } else if (eAvaliar == "reprovado") {
-                     const email: boolean = await sendEmail(
-                        req.account.email,
-                        "Aviso de Reprovação de Evento",
-                        `Prezado(a) Usuario(a), \nesperamos que esta mensagem o(a) encontre bem; \ninformamos que seu evento, intitulado ${event[0].titulo}, foi reprovado em nosso sistema de avaliação, possivelmente por não conformidades com os critérios estabelecidos para aprovação; \na reprovação, no entanto, não impede que você o reenvie após ajustes, e recomendamos revisar as diretrizes de nossos eventos para garantir alinhamento; \nagradecemos sua compreensão e esperamos continuar colaborando com você. \nAtenciosamente, Equipe de Avaliação de Eventos`
-                     );
+         if (req.account && req.account.role == "moderador") {
+            if (event && event.length > 0) {
+               if (eAvaliar == "aprovado") {
+                  await connection.execute(updateSql, [eId], {
+                     autoCommit: true,
+                  });
+                  res.status(200).send({
+                     code: res.statusCode,
+                     msg: "Evento Aprovado com Sucesso!",
+                  });
+               } else if (eAvaliar == "reprovado") {
+                  const email: boolean = await sendEmail(
+                     req.account.email,
+                     "Aviso de Reprovação de Evento",
+                     `Prezado(a) Usuario(a), \nesperamos que esta mensagem o(a) encontre bem; \ninformamos que seu evento, intitulado ${event[0].titulo}, foi reprovado em nosso sistema de avaliação, possivelmente por não conformidades com os critérios estabelecidos para aprovação; \na reprovação, no entanto, não impede que você o reenvie após ajustes, e recomendamos revisar as diretrizes de nossos eventos para garantir alinhamento; \nagradecemos sua compreensão e esperamos continuar colaborando com você. \nAtenciosamente, Equipe de Avaliação de Eventos`
+                  );
 
-                     let msgEmail: string;
-                     if (email) {
-                        msgEmail = "E-mail de Reprovação enviado com sucesso!";
-                     } else {
-                        msgEmail = "Falha ao enviar e-mail de Reprovação!";
-                     }
-                     res.status(400).send({
-                        code: res.statusCode,
-                        msg: "Evento Reprovado!",
-                        msgEmail: msgEmail,
-                     });
+                  let msgEmail: string;
+                  if (email) {
+                     msgEmail = "E-mail de Reprovação enviado com sucesso!";
+                  } else {
+                     msgEmail = "Falha ao enviar e-mail de Reprovação!";
                   }
-               } else {
                   res.status(400).send({
                      code: res.statusCode,
-                     msg: "Evento não existe",
+                     msg: "Evento Reprovado!",
+                     msgEmail: msgEmail,
                   });
                }
             } else {
                res.status(400).send({
                   code: res.statusCode,
-                  msg: "Acesso negado, você não é moderador",
+                  msg: "Evento não existe",
                });
             }
+         } else {
+            res.status(400).send({
+               code: res.statusCode,
+               msg: "Acesso negado, você não é moderador",
+            });
          }
       } catch (err) {
-         console.log(err);
+         console.error(err);
       } finally {
          if (connection) {
             try {
                await connection.close();
             } catch (err) {
-               console.log(err);
+               console.error(err);
+            }
+         }
+      }
+   };
+
+   function betDistribution (betValue: number, qtdBettors: number, totalBetValue: number): number {
+      return totalBetValue * (betValue/qtdBettors)
+   }
+
+   async function updateWallet (valueReceive: number, accountId: number): Promise<boolean> {
+      let connection;
+
+      try {
+         connection = await OracleDB.getConnection(dbConfig)
+
+         const result = (await connection.execute(
+            `UPDATE WALLET SET SALDO = SALDO + :valorReceber WHERE USERID = :accountId`,
+            [valueReceive, accountId],
+            { autoCommit: true }
+          )).rowsAffected;
+
+          if(result && result > 0) {
+            return true
+          }
+
+
+      } catch (err) {
+         console.error(err)
+      } finally {
+         if(connection) {
+            try {
+               await connection.close()
+            } catch (err) {
+               console.error(err)
+            }
+         }
+      }
+
+      return false
+
+   }
+
+   export const finishEvent = async (
+      req: CustomRequest,
+      res: Response
+   ): Promise<void> => {
+      let connection;
+
+      try {
+         connection = await OracleDB.getConnection(dbConfig);
+
+         const eId = req.get("eventId");
+
+         const event = await checkEvent(eId);
+
+         const sql: string = `
+         UPDATE EVENTS 
+         SET STATUS = 'closed' 
+         WHERE ID = :eId
+         `;
+
+         if (req.account && req.account.role == "moderador") {
+            if (event && event.length > 0) {
+               const data = new Date()
+               let dataFim = event[0].dataFim;
+
+               if (data > dataFim) {
+                  await connection.execute(sql, [eId], { autoCommit: true });
+
+                  const sqlBettors: string = `
+                  SELECT 
+                     ID AS "id",
+                     valor AS "valor",
+                     accountsID AS "accountId",
+                     choice AS "choice"
+                  FROM BETS WHERE eventoID = :eventId
+                  `;
+
+                  const bettors = ((await connection.execute(sqlBettors, [eId])).rows) as Apostarores[];
+
+                  const sumTotal = bettors.reduce((previousValue: number, currentValue: Apostarores) => {
+                     return previousValue += currentValue.valor
+                  }, 0)
+
+                  const qtdBettors = bettors.length
+
+                  bettors.forEach( async (Bettors) => {
+                     const {id, valor, choice, accountId} = Bettors
+                     const valueReceive: number = betDistribution(valor, qtdBettors, sumTotal)
+
+                     if(choice > 0) {
+                        const messageWallet = await updateWallet(valueReceive, accountId)
+
+                        // console.log("Usuario apostado", {
+                        //    valorApostado: valor,
+                        //    valorReceber: distribuicaoAposta(valor, qtdApostadores, sumTotal),
+                        //    choice,
+                        //    accountId,
+                        //    msg: messageWallet ? "Alterei a wallet" : "Erro Wallet"
+                        // })
+                     } 
+                     // else {
+                     //    console.log("Usuario Não apostado", {
+                     //       valorApostado: valor,
+                     //       valorReceber: distribuicaoAposta(valor, qtdApostadores, somaTotal),
+                     //       choice,
+                     //       accountId
+                     //    })
+                     // }
+                  })
+
+                  res.status(200).send({
+                     code: res.statusCode,
+                     msg: "Evento Finalizado",
+                  });
+               } else {
+                  res.status(400).send({
+                     code: res.statusCode,
+                     msg: `Não foi possivel encerrar o evento, encerrarmento somente depois da data ${dataFim.toLocaleDateString()}`, 
+                  });
+               }
+            } else {
+               res.status(400).send({
+                  code: res.statusCode,
+                  msg: "Evento não existe",
+               });
+            }
+         } else {
+            res.status(400).send({
+               code: res.statusCode,
+               msg: "Acesso negado, você não é moderador",
+            });
+         }
+      } catch (err) {
+         console.error(err);
+      } finally {
+         if (connection) {
+            try {
+               await connection.close();
+            } catch (err) {
+               console.error(err);
             }
          }
       }
@@ -302,10 +447,21 @@ export namespace EventHandler {
          connection = await OracleDB.getConnection(dbConfig);
 
          const sql: string = `
-         SELECT * FROM EVENTS WHERE ID = :eId 
+         SELECT 
+            ID as "id",
+            TITULO as "titulo",
+            DESCRICAO as "descricao",
+            VALORCOTA as "valorCota",
+            DATAINICIO as "dataInicio",
+            DATAFIM as "dataFim",
+            DATACRIACAO "dataCriacao",
+            STATUS as "status",
+            ACCOUNTSID as "accountId"
+         FROM EVENTS WHERE ID = :eId 
          `;
 
          const result = (await connection.execute(sql, [eId])).rows as Event[];
+
          return result;
       } catch (err) {
          console.log(err);
