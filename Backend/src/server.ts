@@ -56,6 +56,7 @@ routes.put(
   "/addFunds", 
     AccountsHandler.verifyToken,
     WalletHandler.addFundsHandler
+)
 
 routes.put(
   "/withdrawFunds", 
