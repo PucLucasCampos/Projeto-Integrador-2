@@ -21,6 +21,13 @@ export namespace EventHandler {
       status: string;
    };
 
+   type Apostarores = {
+      id: number
+      valor: number
+      accountId: number
+      choice: number
+   }
+
    export const getAllEvents = async (req: Request, res: Response): Promise<void> => {
       let connection;
 
@@ -292,6 +299,43 @@ export namespace EventHandler {
       }
    };
 
+   function betDistribution (betValue: number, qtdBettors: number, totalBetValue: number): number {
+      return totalBetValue * (betValue/qtdBettors)
+   }
+
+   async function updateWallet (valueReceive: number, accountId: number): Promise<boolean> {
+      let connection;
+
+      try {
+         connection = await OracleDB.getConnection(dbConfig)
+
+         const result = (await connection.execute(
+            `UPDATE WALLET SET SALDO = SALDO + :valorReceber WHERE USERID = :accountId`,
+            [valueReceive, accountId],
+            { autoCommit: true }
+          )).rowsAffected;
+
+          if(result && result > 0) {
+            return true
+          }
+
+
+      } catch (err) {
+         console.error(err)
+      } finally {
+         if(connection) {
+            try {
+               await connection.close()
+            } catch (err) {
+               console.error(err)
+            }
+         }
+      }
+
+      return false
+
+   }
+
    export const finishEvent = async (
       req: CustomRequest,
       res: Response
@@ -319,6 +363,48 @@ export namespace EventHandler {
                if (data > dataFim) {
                   await connection.execute(sql, [eId], { autoCommit: true });
 
+                  const sqlBettors: string = `
+                  SELECT 
+                     ID AS "id",
+                     valor AS "valor",
+                     accountsID AS "accountId",
+                     choice AS "choice"
+                  FROM BETS WHERE eventoID = :eventId
+                  `;
+
+                  const bettors = ((await connection.execute(sqlBettors, [eId])).rows) as Apostarores[];
+
+                  const sumTotal = bettors.reduce((previousValue: number, currentValue: Apostarores) => {
+                     return previousValue += currentValue.valor
+                  }, 0)
+
+                  const qtdBettors = bettors.length
+
+                  bettors.forEach( async (Bettors) => {
+                     const {id, valor, choice, accountId} = Bettors
+                     const valueReceive: number = betDistribution(valor, qtdBettors, sumTotal)
+
+                     if(choice > 0) {
+                        const messageWallet = await updateWallet(valueReceive, accountId)
+
+                        // console.log("Usuario apostado", {
+                        //    valorApostado: valor,
+                        //    valorReceber: distribuicaoAposta(valor, qtdApostadores, sumTotal),
+                        //    choice,
+                        //    accountId,
+                        //    msg: messageWallet ? "Alterei a wallet" : "Erro Wallet"
+                        // })
+                     } 
+                     // else {
+                     //    console.log("Usuario Não apostado", {
+                     //       valorApostado: valor,
+                     //       valorReceber: distribuicaoAposta(valor, qtdApostadores, somaTotal),
+                     //       choice,
+                     //       accountId
+                     //    })
+                     // }
+                  })
+
                   res.status(200).send({
                      code: res.statusCode,
                      msg: "Evento Finalizado",
@@ -326,7 +412,7 @@ export namespace EventHandler {
                } else {
                   res.status(400).send({
                      code: res.statusCode,
-                     msg: `Não foi possivel encerrar o evento, encerrarmento somente depois da data ${dataFim.toLocaleDateString()}`,
+                     msg: `Não foi possivel encerrar o evento, encerrarmento somente depois da data ${dataFim.toLocaleDateString()}`, 
                   });
                }
             } else {
@@ -375,8 +461,7 @@ export namespace EventHandler {
          `;
 
          const result = (await connection.execute(sql, [eId])).rows as Event[];
-         console.log(result);
-         console.log(result[0].dataFim);
+
          return result;
       } catch (err) {
          console.log(err);
