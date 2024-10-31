@@ -346,6 +346,7 @@ export namespace EventHandler {
          connection = await OracleDB.getConnection(dbConfig);
 
          const eId = req.get("eventId");
+         const isOccurred = req.get("occurred")
 
          const event = await checkEvent(eId);
 
@@ -355,7 +356,7 @@ export namespace EventHandler {
          WHERE ID = :eId
          `;
 
-         if (req.account && req.account.role == "moderador") {
+         if (req.account && req.account.role == "moderador" && isOccurred) {
             if (event && event.length > 0) {
                const data = new Date()
                let dataFim = event[0].dataFim;
@@ -374,37 +375,41 @@ export namespace EventHandler {
 
                   const bettors = ((await connection.execute(sqlBettors, [eId])).rows) as Apostarores[];
 
-                  const sumTotal = bettors.reduce((previousValue: number, currentValue: Apostarores) => {
-                     return previousValue += currentValue.valor
+                  const notChoice: Apostarores[] = bettors.filter((bet) => bet.choice == 0)
+
+                  const sumTotal = notChoice.reduce((previousValue: number, currentValue: Apostarores) => {
+                        return previousValue += currentValue.valor
                   }, 0)
 
                   const qtdBettors = bettors.length
 
                   bettors.forEach( async (Bettors) => {
-                     const {id, valor, choice, accountId} = Bettors
+                     const {valor, choice, accountId} = Bettors
                      const valueReceive: number = betDistribution(valor, qtdBettors, sumTotal)
+                     const isOccurredBool: number = isOccurred.toLowerCase() == "sim" ? 1 : 0
 
-                     if(choice > 0) {
-                        const messageWallet = await updateWallet(valueReceive, accountId)
 
-                        // console.log("Usuario apostado", {
+                     if(isOccurredBool == choice) {
+                        await updateWallet(valueReceive, accountId)
+
+                        // console.log("Usuario", {
                         //    valorApostado: valor,
-                        //    valorReceber: distribuicaoAposta(valor, qtdApostadores, sumTotal),
-                        //    choice,
+                        //    valorReceber: betDistribution(valor, qtdBettors, sumTotal),
                         //    accountId,
+                        //    choice: "Usuario apostado" ,
                         //    msg: messageWallet ? "Alterei a wallet" : "Erro Wallet"
                         // })
                      } 
                      // else {
-                     //    console.log("Usuario Não apostado", {
+                     //    console.log("Usuario", {
                      //       valorApostado: valor,
-                     //       valorReceber: distribuicaoAposta(valor, qtdApostadores, somaTotal),
-                     //       choice,
-                     //       accountId
+                     //       valorReceber: 0,
+                     //       accountId,
+                     //       choice: "Usuario não apostado",
+                     //       msg: "Sem alteração na wallet"
                      //    })
                      // }
                   })
-
                   res.status(200).send({
                      code: res.statusCode,
                      msg: "Evento Finalizado",
