@@ -7,7 +7,7 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #2e2d2d;
+    background-color: #2e2d2d !important;
 }
 
 .login-container {
