@@ -39,7 +39,7 @@ export namespace EventHandler {
 
       const eParam = req.get("parametro");
 
-      const sql: string = `
+      var sql = `
          SELECT 
             E.ID AS "id",
             E.TITULO AS "titulo",
@@ -51,24 +51,29 @@ export namespace EventHandler {
             A.ID AS "accountId",
             A.NAME AS "name",
             A.EMAIL AS "email",
+            COUNT(B.ID) AS "qtdApostas",
             COALESCE(SUM(B.VALOR), 0) AS "valorApostado"
          FROM EVENTS E
             JOIN ACCOUNTS A ON A.ID = E.ACCOUNTSID
             LEFT JOIN BETS B ON B.EVENTOID = E.ID
-         WHERE 
+         `;
+
+      // if (
+      //   eParam == "awaiting approval" ||
+      //   eParam == "already occurred" ||
+      //   eParam == "deleted" ||
+      //   eParam == "approved" ||
+      //   eParam == "closed"
+      // ) {
+      if (eParam) {
+        sql += `
+          WHERE 
             E.STATUS = :param
          GROUP BY 
             E.ID, E.TITULO, E.DESCRICAO, E.VALORCOTA, E.DATAINICIO, E.DATAFIM, E.STATUS,
             A.ID, A.NAME, A.EMAIL
-         `;
+        `;
 
-      if (
-        eParam == "awaiting approval" ||
-        eParam == "already occurred" ||
-        eParam == "deleted" ||
-        eParam == "approved" ||
-        eParam == "closed"
-      ) {
         const result: Event[] | unknown = (
           await connection.execute(sql, [eParam])
         ).rows;
@@ -78,12 +83,27 @@ export namespace EventHandler {
           events: result,
         });
       } else {
-        res.status(400).send({
+        sql += `
+        GROUP BY 
+            E.ID, E.TITULO, E.DESCRICAO, E.VALORCOTA, E.DATAINICIO, E.DATAFIM, E.STATUS,
+            A.ID, A.NAME, A.EMAIL
+            `;
+
+        const result: Event[] | unknown = (await connection.execute(sql)).rows;
+        res.status(200).send({
           code: res.statusCode,
-          msg: "Parametro não econtrado",
+          msg: "Resultado da busca Eventos",
+          events: result,
         });
-        return;
       }
+
+      // } else {
+      //   res.status(400).send({
+      //     code: res.statusCode,
+      //     msg: "Parametro não econtrado",
+      //   });
+      //   return;
+      // }
     } catch (err) {
       console.log(err);
     } finally {
@@ -320,7 +340,7 @@ export namespace EventHandler {
     sumTotalWin: number,
     sumTotalBet: number
   ): number {
-    return betValue / (sumTotalWin) * sumTotalBet 
+    return (betValue / sumTotalWin) * sumTotalBet;
   }
 
   async function updateWallet(
@@ -399,18 +419,20 @@ export namespace EventHandler {
               .rows as Apostarores[];
             const choice = isOccurred.toLowerCase() == "sim" ? 1 : 0;
 
-            const ganhadores: Apostarores[] = bettors.filter((bet) => bet.choice == choice)
+            const ganhadores: Apostarores[] = bettors.filter(
+              (bet) => bet.choice == choice
+            );
 
             const sumTotalWin = ganhadores.reduce(
               (previousValue: number, currentValue: Apostarores) => {
-                return previousValue += currentValue.valor;
+                return (previousValue += currentValue.valor);
               },
               0
             );
 
             const sumTotalBet = bettors.reduce(
               (previousValue: number, currentValue: Apostarores) => {
-                return previousValue += currentValue.valor;
+                return (previousValue += currentValue.valor);
               },
               0
             );
@@ -426,7 +448,7 @@ export namespace EventHandler {
                 isOccurred.toLowerCase() == "sim" ? 1 : 0;
 
               if (isOccurredBool == choice) {
-                await updateWallet(valueReceive, accountId)
+                await updateWallet(valueReceive, accountId);
               }
             });
             res.status(200).send({
@@ -509,44 +531,54 @@ export namespace EventHandler {
     try {
       connection = await OracleDB.getConnection(dbConfig);
 
-      const searchParam = req.query.search as string;
-
-      if (!searchParam || searchParam.trim() === "") {
-        res.status(400).send({
-          code: 400,
-          msg: "O parâmetro de busca é obrigatório.",
-        });
-      }
+      const searchParam = req.query.search;
 
       const sql: string = `
-            SELECT 
-               E.ID AS "id",
-               E.TITULO AS "titulo",
-               E.DESCRICAO AS "descricao",
-               E.VALORCOTA AS "valorCota",
-               E.DATAINICIO AS "dataInicio",
-               E.DATAFIM AS "dataFim",
-               E.STATUS AS "status"
-            FROM EVENTS E
+         SELECT 
+            E.ID AS "id",
+            E.TITULO AS "titulo",
+            E.DESCRICAO AS "descricao",
+            E.VALORCOTA AS "valorCota",
+            E.DATAINICIO AS "dataInicio",
+            E.DATAFIM AS "dataFim",
+            E.STATUS AS "status",
+            A.ID AS "accountId",
+            A.NAME AS "name",
+            A.EMAIL AS "email",
+            COUNT(B.ID) AS "qtdApostas",
+            COALESCE(SUM(B.VALOR), 0) AS "valorApostado"
+         FROM EVENTS E
+            JOIN ACCOUNTS A ON A.ID = E.ACCOUNTSID
+            LEFT JOIN BETS B ON B.EVENTOID = E.ID
             WHERE 
                LOWER(E.TITULO) LIKE '%' || :search || '%' 
                OR LOWER(E.DESCRICAO) LIKE '%' || :search || '%'
+               GROUP BY 
+            E.ID, E.TITULO, E.DESCRICAO, E.VALORCOTA, E.DATAINICIO, E.DATAFIM, E.STATUS,
+            A.ID, A.NAME, A.EMAIL
              `;
 
-      const result = await connection.execute(sql, {
-        search: searchParam.toLowerCase(),
-      });
+      if (searchParam && searchParam.toString().trim() != "") {
+        const search = searchParam.toString().toLowerCase();
 
-      if (result.rows && result.rows.length > 0) {
-        res.status(200).send({
-          code: 200,
-          msg: "Eventos encontrados",
-          events: result.rows,
-        });
+        const result = await connection.execute(sql, { search });
+
+        if (result.rows && result.rows.length > 0) {
+          res.status(200).send({
+            code: 200,
+            msg: "Eventos encontrados",
+            events: result.rows,
+          });
+        } else {
+          res.status(400).send({
+            code: 400,
+            msg: "Nenhum evento encontrado para o termo buscado.",
+          });
+        }
       } else {
-        res.status(404).send({
-          code: 404,
-          msg: "Nenhum evento encontrado para o termo buscado.",
+        res.status(400).send({
+          code: 400,
+          msg: "O parâmetro de busca é obrigatório.",
         });
       }
     } catch (err) {

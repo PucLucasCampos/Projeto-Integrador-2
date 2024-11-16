@@ -346,7 +346,8 @@ export namespace AccountsHandler {
           a.name AS "name", 
           a.birthday AS "birthday", 
           w.id AS "walletId",
-          a.role as "role" 
+          w.saldo AS "balance",
+          a.role as "role"
         FROM ACCOUNTS a
         JOIN WALLET w ON a.id = w.userid 
         WHERE a.token = :token
