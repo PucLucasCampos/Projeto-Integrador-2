@@ -7,6 +7,7 @@
   <title>Home</title>
   <link rel="stylesheet" href="styles/home.css">
   <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+  <script src="bootstrap/js/bootstrap.bundle.min.js"></script>
 </head>
 
 <body>
@@ -31,20 +32,19 @@
         </ul>
       </div>
       <div class="user-saldo">
-        <div class="saldo">SALDO DO USUARIO</div>
-        <div>NOME DO USUARIO</div>
+        <div class="saldo" id="saldo-user">SALDO DO USUARIO</div>
+        <div id="nome-user">NOME DO USUARIO</div>
       </div>
     </div>
   </nav>
 
-  <div class="main-content">
+  <main class="container main-content">
     <div class="betting-area">
-
       <div class="search-container">
-        <div class="search-box">
-          <input type="text" class="search-input" placeholder="Busque eventos">
-          <button class="search-button">Buscar</button>
-        </div>
+        <form class="search-box">
+          <input type="text" class="search-input" id="search-input" placeholder="Busque eventos">
+          <button type="submit" class="search-button" id="search-button">Buscar</button>
+        </form>
       </div>
 
       <div class="container">
@@ -63,23 +63,23 @@
         <div class="tab-content" id="nav-tabContent">
           <div class="tab-pane fade show active p-3" id="nav-ending" role="tabpanel">
             <h2 class="section-title">Eventos Próximos de Encerrar</h2>
-            <div class="event-grid">
-              <div class="event-card">
+            <div class="event-grid" id="card-ending">
+              <!-- <div class="event-card">
                 <div class="event-time">TEMPO PARA ENCERRAR A APOSTA</div>
                 <div class="event-title">NOME APOSTA</div>
                 <div class="event-stats">QUANTAS APOSTAS REALIZADAS</div>
                 <button class="event-button">Apostar</button>
-              </div>
+              </div> -->
             </div>
           </div>
           <div class="tab-pane fade p-3" id="nav-popular" role="tabpanel">
             <h2 class="section-title">Mais Apostados</h2>
-            <div class="event-grid">
-              <div class="event-card">
+            <div class="event-grid" id="card-popular">
+              <!-- <div class="event-card">
                 <div class="event-title">NOME APOSTA</div>
                 <div class="event-stats">QUANTAS APOSTAS REALIZADAS</div>
                 <button class="event-button">Apostar</button>
-              </div>
+              </div> -->
             </div>
           </div>
           <div class="tab-pane fade p-3" id="nav-category" role="tabpanel">
@@ -119,23 +119,23 @@
                   </div>
 
                   <div class="mb-2"></div>
-                    <label for="dateEndEvent" class="form-label">Data de encerramento</label>
-                    <input type="date" class="form-control" id="dateEndEvent" required>
-                  </div>
-
-                  <div>
-                    <button type="submit" class="eventCreate-button">Criar</button>
-                  </div>
-                </form>
+                  <label for="dateEndEvent" class="form-label">Data de encerramento</label>
+                  <input type="date" class="form-control" id="dateEndEvent" required>
               </div>
+
+              <div>
+                <button type="submit" class="eventCreate-button">Criar</button>
+              </div>
+              </form>
             </div>
           </div>
         </div>
-
       </div>
-    </div>
 
-    <script src="bootstrap/js/bootstrap.bundle.min.js"></script>
+    </div>
+    </div>
+  </main>
 </body>
+<script type="module" src="./scripts/index.js"></script>
 
 </html>
