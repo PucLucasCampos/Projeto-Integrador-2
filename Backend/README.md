@@ -2,10 +2,6 @@
 
 Este é um projeto backend em TypeScript usando express.
 
-# Frontend usando HTML | CSS | JS | BootStrap
-
-Recomendado usar a extensão *Live Server*
-
 ## Instalando as dependências
 
 Ao fazer o clone do repositório, basta rodar o comando: 
