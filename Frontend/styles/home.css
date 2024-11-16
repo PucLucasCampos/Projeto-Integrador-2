@@ -84,12 +84,6 @@ nav {
     background-color: rgb(255, 177, 190);
     border-radius: 10px;
     padding: 1rem;
-    transition: transform 0.3s;
-    cursor: pointer;
-}
-
-.event-card:hover {
-    background-color: rgb(255, 152, 169);
 }
 
 .event-time {
@@ -106,6 +100,19 @@ nav {
 .event-stats {
     font-size: 0.9rem;
     color: white;
+}
+
+.event-button {
+    padding: 5px 10px;
+    background: rgb(255, 145, 163);
+    border: none;
+    border-radius: 5px;
+    margin-top: 15px;
+    cursor: pointer;
+}
+
+.event-button:hover {
+    background-color: rgb(255, 132, 152);
 }
 
 .category-cards {
@@ -140,4 +147,27 @@ nav {
 .category-count {
     font-size: 0.9rem;
     color: #888;
+}
+
+.tab-home{
+    background-color: pink;
+}
+
+.form-section {
+    padding: 20px;
+    background-color: rgb(255, 177, 190);
+    border-radius: 5px;
+}
+
+.eventCreate-button {
+    padding: 5px 526px;
+    background: rgb(255, 177, 190);
+    border: none;
+    border-radius: 5px;
+    margin-top: 15px;
+    cursor: pointer;
+}
+
+.eventCreate-button:hover{
+    background: rgb(255, 145, 163);
 }
