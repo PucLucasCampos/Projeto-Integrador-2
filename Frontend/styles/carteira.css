@@ -1,0 +1,15 @@
+.formulario-tk{
+    width: 70%;
+    margin-bottom: 8px;
+}
+
+.box-carteira{
+    border: 1px solid #FFD700;    
+    width: 12%;
+    height: 28px;
+    border-radius: 10px;
+}
+
+.tabela-carteira{
+    background-color: #081b04;
+}

@@ -6,136 +6,117 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Home</title>
   <link rel="stylesheet" href="styles/home.css">
+  <link rel="stylesheet" href="styles/global.css">
   <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
   <script src="bootstrap/js/bootstrap.bundle.min.js"></script>
 </head>
 
 <body>
-
-  <nav class="navbar navbar-expand-lg navbar-light ">
+  <nav class="navbar navbar-expand-lg navbar-light sticky-top ">
     <div class="container-fluid">
-      <a class="navbar-brand" href="home.html">LOGO</a>
+      <img class="minilogo" src="assets/tkzin.png">
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav">
           <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="home.html">Home</a>
+            <a class="text-g active menu-g" aria-current="page" href="home.html">HOME</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#">Eventos</a>
+            <a class="text-g menu-g" href="apostas.html">APOSTAS</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="wallet.html">Minha carteira</a>
+            <a class="text-g menu-g" href="carteira.html">CARTEIRA</a>
           </li>
           <li class="nav-item"></li>
-          <a class="nav-link" href="index.html">Sair</a>
+          <a class="text-g menu-g" href="login.html">SAIR</a>
           </li>
         </ul>
       </div>
       <div class="user-saldo">
-        <div class="saldo" id="saldo-user">SALDO DO USUARIO</div>
-        <div id="nome-user">NOME DO USUARIO</div>
+        <div class="saldo" id="saldo-user">R$ SALDO DO USUARIO</div>
+        <div class="text-w" id="nome-user">NOME DO USUARIO</div><!--(COLOCAR NOME EM MAIUSCULO)-->
       </div>
     </div>
   </nav>
 
-  <main class="container main-content">
-    <div class="betting-area">
-      <div class="search-container">
-        <form class="search-box">
-          <input type="text" class="search-input" id="search-input" placeholder="Busque eventos">
-          <button type="submit" class="search-button" id="search-button">Buscar</button>
-        </form>
-      </div>
+  <center>
+    <main class="container main-content">
+      <div class="betting-area">
+        <div class="search-container">
+          <form class="search-box">
+            <input type="text" class="search-input" id="search-input" placeholder="Busque eventos">
+            <button type="submit" class="search-button" id="search-button">Buscar</button>
+          </form>
+        </div>
+        <div class="events-section">
+          <h2 class="text-w section-title">EVENTOS</h2>
+          <nav>
+            <center>
+              <div class="nav nav-eventos-botao nav-eventos nav-tabs mb-3" id="nav-tab" role="tablist">
+                <button class="botao nav-link active" id="nav-ending-tab" data-bs-toggle="tab"
+                  data-bs-target="#nav-ending" type="button" role="tab" aria-controls="nav-ending"
+                  aria-selected="true">Próximos a encerrar
+                </button>
 
-      <div class="container">
-        <nav>
-          <div class="nav nav-tabs tab-home" id="nav-tab" role="tablist">
-            <button class="nav-link active" id="nav-ending-tab" data-bs-toggle="tab" data-bs-target="#nav-ending"
-              type="button" role="tab" aria-controls="nav-ending" aria-selected="true">Próximos de vencer</button>
-            <button class="nav-link" id="nav-popular-tab" data-bs-toggle="tab" data-bs-target="#nav-popular"
-              type="button" role="tab" aria-controls="nav-popular" aria-selected="false">Mais apostados</button>
-            <button class="nav-link" id="nav-category-tab" data-bs-toggle="tab" data-bs-target="#nav-category"
-              type="button" role="tab" aria-controls="nav-category" aria-selected="false">Categorias</button>
-            <button class="nav-link" id="nav-create-tab" data-bs-toggle="tab" data-bs-target="#nav-create" type="button"
-              role="tab" aria-controls="nav-create" aria-selected="false">Criar evento</button>
-          </div>
-        </nav>
-        <div class="tab-content" id="nav-tabContent">
-          <div class="tab-pane fade show active p-3" id="nav-ending" role="tabpanel">
-            <h2 class="section-title">Eventos Próximos de Encerrar</h2>
-            <div class="event-grid" id="card-ending">
-              <!-- <div class="event-card">
-                <div class="event-time">TEMPO PARA ENCERRAR A APOSTA</div>
-                <div class="event-title">NOME APOSTA</div>
-                <div class="event-stats">QUANTAS APOSTAS REALIZADAS</div>
-                <button class="event-button">Apostar</button>
-              </div> -->
+                <button class="nav-link" id="nav-popular-tab" data-bs-toggle="tab" data-bs-target="#nav-popular"
+                  type="button" role="tab" aria-controls="nav-popular" aria-selected="false">Mais Apostado</button>
+              </div>
+          </nav>
+
+          <div class="tab-content" id="nav-tabContent">
+            <div class="tab-pane fade active show" id="nav-ending" role="tabpanel" aria-labelledby="nav-events-tab">
+              <div class="event-grid" id="card-ending">
+
+
+                <!-- Card Evento -->
+                <div class="event-card">
+                  <div class="event-time">
+                    TEMPO PARA ENCERRAR A APOSTA
+
+                  </div>
+                  <div class="event-title">Titulo</div>
+                  <div class="event-stats">Quantidade de aposta</div>
+                  <button class="event-button">Apostar</button>
+                </div>
+
+
+              </div>
             </div>
-          </div>
-          <div class="tab-pane fade p-3" id="nav-popular" role="tabpanel">
-            <h2 class="section-title">Mais Apostados</h2>
-            <div class="event-grid" id="card-popular">
-              <!-- <div class="event-card">
-                <div class="event-title">NOME APOSTA</div>
-                <div class="event-stats">QUANTAS APOSTAS REALIZADAS</div>
-                <button class="event-button">Apostar</button>
-              </div> -->
-            </div>
-          </div>
-          <div class="tab-pane fade p-3" id="nav-category" role="tabpanel">
-            <h2 class="section-title">Categorias em Destaque</h2>
-            <div class="category-cards">
-              <div class="category-card">
-                <div class="category-icon">🏅</div>
-                <div class="category-name">Olimpíadas (NOME CATEGORIA)</div>
-                <div class="category-count">23 eventos (QUANTIDADE EVENTO DA CATEGORIA)</div>
+
+            <div class="tab-pane fade" id="nav-popular" role="tabpanel" aria-labelledby="nav-popular-tab">
+              <div class="event-grid" id="card-popular">
+
+                <!-- Card Evento -->
+                <div class="event-card">
+                  <div class="event-time">
+                    TEMPO PARA ENCERRAR A APOSTA
+
+                  </div>
+                  <div class="event-title">Titulo</div>
+                  <div class="event-stats">Quantidade de aposta</div>
+                  <button class="event-button">Apostar</button>
+                </div>
+                
               </div>
             </div>
           </div>
-          <div class="tab-pane fade p-3" id="nav-create" role="tabpanel">
-            <h2 class="section-title">Insira as informações necessárias</h2>
-            <div class="login-container">
-              <div class="form-section">
-                <form action="#">
 
-                  <div class="mb-2">
-                    <label for="titleEvent" class="form-label">Título</label>
-                    <input type="text" class="form-control" id="titleEvent" required>
-                  </div>
-
-                  <div class="mb-2">
-                    <label for="descriptionEvent" class="form-label">Descrição</label>
-                    <textarea class="form-control" id="descriptionEvent" rows="3"></textarea>
-                  </div>
-
-                  <div class="mb-2">
-                    <label for="cotaEvent" class="form-label">Valor da cota</label>
-                    <input type="text" class="form-control" id="cotaEvent" required>
-                  </div>
-
-                  <div class="mb-2">
-                    <label for="dateStartEvent" class="form-label">Data do início</label>
-                    <input type="date" class="form-control" id="dateStartEvent" required>
-                  </div>
-
-                  <div class="mb-2"></div>
-                  <label for="dateEndEvent" class="form-label">Data de encerramento</label>
-                  <input type="date" class="form-control" id="dateEndEvent" required>
-              </div>
-
-              <div>
-                <button type="submit" class="eventCreate-button">Criar</button>
-              </div>
-              </form>
+          <h2 class="section-title text-w">DESTAQUES</h2>
+          <div class="category-cards">
+            <div class="category-card">
+              <div class="category-icon">🏅</div>
+              <div class="category-name">Olimpíadas (NOME CATEGORIA)</div>
+              <div class="category-count">23 eventos (QUANTIDADE EVENTO DA CATEGORIA)</div>
+            </div>
+            <div class="category-card">
+              <div class="category-icon">📊</div>
+              <div class="category-name">Olimpíadas (NOME CATEGORIA)</div>
+              <div class="category-count">45 eventos (QUANTIDADE EVENTO DA CATEGORIA)</div>
             </div>
           </div>
         </div>
       </div>
-
-    </div>
-    </div>
-  </main>
+    </main>
 </body>
-<script type="module" src="./scripts/index.js"></script>
+<script type="module" src="./scripts/event.js"></script>
 
 </html>

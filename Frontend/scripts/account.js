@@ -7,6 +7,7 @@ const token =
 
 setCookie("token", token);
 
+// Buscar dados do usuário e atualizar na página
 export const account = async () => {
   try {
     const data = await fetchData("/getAccount", getCookie("token"), "GET");
@@ -24,3 +25,5 @@ export const account = async () => {
     console.error("Erro ao buscar dados:", error);
   }
 };
+
+account()
