@@ -275,7 +275,7 @@ export namespace AccountsHandler {
             msg: "Usuário criado com sucesso!",
           });
         } else {
-          res.status(200).send({
+          res.status(209).send({
             code: res.statusCode,
             msg: "Já existe um usuário com essas credênciais",
           });

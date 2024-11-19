@@ -4,7 +4,7 @@ import { AccountsHandler } from "./accounts/accounts";
 import { EventHandler } from "./events/events";
 import { WalletHandler } from "./wallet/wallet";
 import dotenv from "dotenv";
-import cors from "cors"
+import cors from "cors";
 dotenv.config();
 
 const port = 3000;
