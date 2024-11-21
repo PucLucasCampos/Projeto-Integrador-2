@@ -7,37 +7,6 @@
         <link rel="stylesheet" href="styles/global.css">
         <link rel="stylesheet" type="text/css" href="styles/auth.css">
     </head>
-
-    <script>
-        const singUp = async (e) => {
-            e.preventDefault()
-
-   try {
-      const name = document.getElementById("name").value;
-      const birthday = document.getElementById("birthday").value;
-      const emial = document.getElementById("birthday").value;
-      const password = document.getElementById("birthday").value;
-
-      // const data = await fetchData("/singUp", "", "PUT", {
-      //    name: name,
-      //    email: emial,
-      //    password: password,
-      //    birthday: birthday,
-      // });
-
-
-      console.log({
-            name: name,
-            email: emial,
-            password: password,
-            birthday: birthday,
-         });
-   } catch (error) {
-      console.error(error);
-   }
-};
-        </script>
-
     <body>
         <div class="login-container">
             <div class="form-section">
@@ -62,7 +31,6 @@
                 </form>
             </div>
         </div>
+        <script type="module" src="./scripts/account.js"></script>
     </body>
-
-     <script type="module" src="./scripts/account.js"></script>
 </html>

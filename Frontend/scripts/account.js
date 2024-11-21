@@ -26,8 +26,6 @@ const account = async () => {
    }
 };
 
-// account();
-
 const signUp = async (e) => {
    e.preventDefault();
 
@@ -52,12 +50,58 @@ const signUp = async (e) => {
          }
 
          window.location.href = "home.html";
-      }else{
-        window.alert("Requisição inválida - Parâmetros faltando.");
+      } else {
+         window.alert("Requisição inválida - Parâmetros faltando.");
       }
    } catch (error) {
       console.error(error);
    }
 };
 
-document.getElementById("btnCadastro").addEventListener("click", signUp);
+const login = async (e) => {
+   e.preventDefault();
+
+   const password = document.getElementById("password").value;
+   const email = document.getElementById("email").value;
+
+   console.log({
+      email: email,
+      password: password,
+   });
+
+   try {
+      if (email && password) {
+         const data = await fetchData("/login", "", "POST", {
+            email: email,
+            password: password,
+         });
+
+         if (data.code == 401) {
+            window.alert(data.msg);
+            return;
+         }
+
+         setCookie("token", data.token);
+
+         console.log(data);
+         window.location.href = "home.html";
+      } else {
+         window.alert("Senha ou email invalidos");
+      }
+   } catch (error) {
+      console.error(error);
+   }
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+   const btnCadastro = document.getElementById("btnCadastro");
+   const btnLogin = document.getElementById("btnLogin");
+
+   if (btnCadastro) {
+      btnCadastro.addEventListener("click", signUp);
+   }
+
+   if (btnLogin) {
+      btnLogin.addEventListener("click", login);
+   }
+});
