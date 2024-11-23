@@ -1,0 +1,100 @@
+@import "vars.css";
+
+* {
+    margin: 0;
+    padding: 0;
+    font-family: "Times New Roman", Times, serif;
+}
+
+.minilogo{
+    width: 7%;
+    height: 0%;
+    margin-right: 15px;
+}
+
+body {
+    background-color: black;
+    color: #DDD4B6;
+}
+
+.saldo {
+    background-color: #04531e;
+    padding: 3px 5px;
+    border-radius: 5px;
+    border: 1px solid #FFD700;
+    margin-right: 10px;
+    color: #FFD700;
+}
+
+.text-w{
+    color: #DDD4B6;
+}
+
+.text-g{
+    color: #b1980b;
+    text-decoration: none;
+}
+
+.menu-g{
+    margin-right: 20px;
+}
+.ativo{    
+    color: #FFD700;
+}
+
+.text-g:hover{
+    color: #FFD700;
+}
+
+.text-d{
+    color: #FFD700;
+}
+
+
+nav {
+    background-color: #04531e;
+    margin-right: 10px;
+}
+
+.nav-eventos {
+    background-color: #04531e;
+}
+
+.nav-eventos-botao {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    align-content: space-around;
+    justify-content: center;
+    align-items: center;
+}
+
+.user-saldo {
+    display: flex;
+    align-items: center;
+}
+
+.botao{
+    margin-right: 10px;
+}
+
+.formulario-g {
+    display: block;
+    padding: .375rem .75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border-radius: .25rem;
+    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+}
+
+text-b{
+    color: black;
+}

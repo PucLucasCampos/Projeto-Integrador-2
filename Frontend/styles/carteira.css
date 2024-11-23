@@ -1,0 +1,36 @@
+.formulario-tk{
+    width: 70%;
+    margin-bottom: 8px;
+}
+
+.box-carteira{
+    font-size: x-large;
+    border: 1px solid #FFD700;    
+    width: 18%;
+    height: 45px;
+    border-radius: 10px;
+    background-color: #081b04;
+}
+
+.tabela-carteira{
+    background-color: #081b04;
+}
+
+/* Botão com amarelo escuro */
+.botao-carteira {
+    background-color: #b58900; /* Amarelo escuro */
+    color: black; /* Texto branco */
+    border: none; /* Sem borda */
+    transition: background-color 0.3s ease, transform 0.2s ease; /* Suaviza transições */
+}
+
+/* Quando o botão é clicado (active) */
+.botao-carteira:active {
+    background-color: #a67700; /* Amarelo padrão Bootstrap */
+    transform: scale(0.95); /* Efeito de clique com leve redução */
+}
+
+/* Hover para melhorar a experiência */
+.botao-carteira:hover {
+    background-color: #e6c300; /* Tom mais escuro no hover */
+}
