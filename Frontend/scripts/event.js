@@ -3,11 +3,32 @@ import {
   calculateTimeRemaining,
   cookieStorage,
 } from "./utils/index.js";
+import {account} from "./account.js"
 
 const { getCookie } = cookieStorage();
 
-var navTabActive = "card-events";
+// Variavel aux para saber em qual tab o usuario esta acessando
+var navTabActive = "card-ending"; // "card-ending" | "card-popular"
 
+/**
+ * Limpar div de eventos para mostrar todos os eventos atualizados
+ * @param {array} events 
+ */
+export const showEvents = async (events) => {
+  const eventGrid = document.getElementById(navTabActive);
+  eventGrid.innerHTML = "";
+
+  if (events) {
+    events.map((event) => {
+      createCard(event);
+    });
+  }
+};
+
+/**
+ * Criar card do evento para aparecer na tela
+ * @param {object} event 
+ */
 const createCard = (event) => {
   const dataFim = new Date(event.dataFim).toLocaleDateString();
 
@@ -25,12 +46,17 @@ const createCard = (event) => {
             <div class="event-stats">Quantidade de aposta: ${event.qtdApostas
               .toString()
               .padStart(2, "0")}</div>
+              <button class="event-button">Apostar</button>
           </div>
     `;
 
   document.querySelector(`#${navTabActive}`).appendChild(newCard);
 };
 
+/**
+ * Buscar todos os eventos de acordo com o status dele no backend
+ * @param {string} status "awaiting approval" | "closed"...
+ */
 export const fetchEvents = async (status) => {
   try {
     var parametroAux = "";
@@ -42,6 +68,8 @@ export const fetchEvents = async (status) => {
     const data = await fetchData("/getEvents", "", "GET", {
       parametro: parametroAux,
     });
+
+    console.log(data)
 
     if (status === "mostBet") {
       const mostEventsBet = data.events.filter((item) => item.qtdApostas > 0);
@@ -55,7 +83,13 @@ export const fetchEvents = async (status) => {
   }
 };
 
-const searchEvent = async () => {
+/**
+ * Barra de pesquisa buscar evento pelo TITULO | DESCRIÇÃO...
+ * @param {*} e 
+ */
+const searchEvent = async (e) => {
+  e.preventDefault()
+
   try {
     const search = document.getElementById("search-input").value;
 
@@ -71,25 +105,20 @@ const searchEvent = async () => {
   }
 };
 
-export const showEvents = async (events) => {
-  const eventGrid = document.getElementById(navTabActive);
-  eventGrid.innerHTML = "";
-
-  if (events) {
-    events.map((event) => {
-      createCard(event);
-    });
-  }
-};
-
-document.getElementById("nav-events-tab").addEventListener("click", () => {
+// Quando o usuario clicar no botão com o id "nav-ending-tab" buscar todos os evento do status "awaiting approval" e atualiza variavel aux
+document.getElementById("nav-ending-tab").addEventListener("click", () => {
   fetchEvents("awaiting approval");
-  navTabActive = "card-events";
+  navTabActive = "card-ending";
 });
 
-document.getElementById("nav-apostado-tab").addEventListener("click", () => {
+// Quando o usuario clicar no botão com o id "nav-popular-tab" buscar todos os evento do status "mostBet" e atualiza variavel aux
+document.getElementById("nav-popular-tab").addEventListener("click", () => {
   fetchEvents("mostBet");
-  navTabActive = "card-apostado";
+  navTabActive = "card-popular";
 });
 
+// Quando o usuario clicar no botão de pesquisar evento realizar a função de pesquisa
 document.getElementById("search-button").addEventListener("click", searchEvent);
+
+fetchEvents("awaiting approval");
+account();

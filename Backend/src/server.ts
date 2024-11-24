@@ -4,11 +4,15 @@ import { AccountsHandler } from "./accounts/accounts";
 import { EventHandler } from "./events/events";
 import { WalletHandler } from "./wallet/wallet";
 import dotenv from "dotenv";
+import cors from "cors";
 dotenv.config();
 
 const port = 3000;
 const server = express();
 const routes = Router();
+server.use(cors({
+  origin: "*",
+}))
 
 routes.use(express.json());
 routes.use(express.urlencoded({ extended: true }));

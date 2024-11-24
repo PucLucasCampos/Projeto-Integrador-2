@@ -265,26 +265,32 @@ export namespace WalletHandler {
 
     const account = req.account;
 
-    if (eventoId && valorAposta && account && choice) {
-      const choiceBool: number = choice.toLowerCase() == "sim" ? 1 : 0
-
-      const sucesso = await betOnEvent(
-        account.id,
-        eventoId,
-        Number(valorAposta),
-        choiceBool
-      );
-
-      res.status(sucesso ? 200 : 500).send({
-        code: res.statusCode,
-        msg: sucesso
-          ? "Aposta realizada com sucesso!"
-          : "Erro ao processar aposta",
-      });
+    if(account && account.role != "moderador") {
+      if (eventoId && valorAposta && choice ) {
+        const choiceBool: number = choice.toLowerCase() == "sim" ? 1 : 0
+  
+        const sucesso = await betOnEvent(
+          account.id,
+          eventoId,
+          Number(valorAposta),
+          choiceBool
+        );
+  
+        res.status(sucesso ? 200 : 500).send({
+          code: res.statusCode,
+          msg: sucesso
+            ? "Aposta realizada com sucesso!"
+            : "Erro ao processar aposta",
+        });
+      } else {
+        res
+          .status(400)
+          .send({ code: res.statusCode, msg: "Parâmetros inválidos" });
+      }
     } else {
       res
-        .status(400)
-        .send({ code: res.statusCode, msg: "Parâmetros inválidos" });
+        .status(401)
+        .send({ code: res.statusCode, msg: "Usuário moderador não pode apostar" });
     }
   };
 }

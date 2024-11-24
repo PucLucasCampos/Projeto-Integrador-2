@@ -1,4 +1,20 @@
+
+/**
+ * Função base para armazenar algum valor no cookie do chrome
+ * @example 
+ * const { setCookie, getCookie, 
+ * deleteCookie, deleteAllCookies } = cookieStorage();
+ * @returns funções { setCookie, getCookie, deleteCookie, deleteAllCookies }
+ */
 export const cookieStorage = () => {
+
+  /**
+   * Adicionar ou alterar um novo valor ao cookie
+   * @param {string} cname nome do cookie
+   * @param {string} cvalue valor do cookie
+   * @param {number} exdays tempo em dias que o cookie estara disponivel
+   * @example setCookie("example", "valor exemplo");
+   */
   function setCookie(cname, cvalue, exdays) {
     const d = new Date();
     d.setTime(d.getTime() + exdays * 24 * 60 * 60 * 1000);
@@ -6,6 +22,14 @@ export const cookieStorage = () => {
     document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
   }
 
+  /**
+   * Buscar o valor de algum cookie
+   * @example
+   * @param {string} cname nome do cookie
+   * @returns valor
+   * 
+   * @example const cookieValor = getCookie("example");
+   */
   function getCookie(cname) {
     let name = cname + "=";
     let decodedCookie = decodeURIComponent(document.cookie);
@@ -22,10 +46,20 @@ export const cookieStorage = () => {
     return "";
   }
 
+  /**
+   * Deletar algum cookie especifico
+   * @param {string} cname nome do cookie
+   * @example deleteCookie("example");
+   */
   function deleteCookie(cname) {
     document.cookie = cname + "=";
   }
 
+  /**
+   * Deletar todos os cookie
+   * 
+   * deleteAllCookies();
+   */
   function deleteAllCookies() {
     const cookies = document.cookie.split(";");
 
