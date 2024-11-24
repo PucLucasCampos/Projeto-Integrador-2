@@ -3,7 +3,6 @@ import {
   calculateTimeRemaining,
   cookieStorage,
 } from "./utils/index.js";
-import {account} from "./account.js"
 
 const { getCookie } = cookieStorage();
 
@@ -12,7 +11,7 @@ var navTabActive = "card-ending"; // "card-ending" | "card-popular"
 
 /**
  * Limpar div de eventos para mostrar todos os eventos atualizados
- * @param {array} events 
+ * @param {array} events
  */
 export const showEvents = async (events) => {
   const eventGrid = document.getElementById(navTabActive);
@@ -27,27 +26,27 @@ export const showEvents = async (events) => {
 
 /**
  * Criar card do evento para aparecer na tela
- * @param {object} event 
+ * @param {object} event
  */
 const createCard = (event) => {
-  const dataFim = new Date(event.dataFim).toLocaleDateString();
+  // const dataFim = new Date(event.dataFim).toLocaleDateString();
 
   const newCard = document.createElement("div", {
     class: "event-card",
   });
 
   newCard.innerHTML = `
-          <div class="event-card">
+            <div class="event-card">
+                <div class="event-title">${event.titulo}</div>
+                <div class="event-text">Apostas Realizadas: ${event.qtdApostas
+                  .toString()
+                  .padStart(2, "0")}</div>
             <div class="event-time">
-            TEMPO PARA ENCERRAR A APOSTA
-            ${calculateTimeRemaining(event.dataFim)} ${dataFim}
+            Encerrar Apostas: ${calculateTimeRemaining(event.dataFim)}
             </div>
-            <div class="event-title">Titulo: ${event.titulo}</div>
-            <div class="event-stats">Quantidade de aposta: ${event.qtdApostas
-              .toString()
-              .padStart(2, "0")}</div>
-              <button class="event-button">Apostar</button>
-          </div>
+                <button class="event-button">Apostar</button>
+              </div>
+     
     `;
 
   document.querySelector(`#${navTabActive}`).appendChild(newCard);
@@ -69,7 +68,7 @@ export const fetchEvents = async (status) => {
       parametro: parametroAux,
     });
 
-    console.log(data)
+    console.log(data);
 
     if (status === "mostBet") {
       const mostEventsBet = data.events.filter((item) => item.qtdApostas > 0);
@@ -85,10 +84,10 @@ export const fetchEvents = async (status) => {
 
 /**
  * Barra de pesquisa buscar evento pelo TITULO | DESCRIÇÃO...
- * @param {*} e 
+ * @param {*} e
  */
 const searchEvent = async (e) => {
-  e.preventDefault()
+  e.preventDefault();
 
   try {
     const search = document.getElementById("search-input").value;
@@ -121,4 +120,3 @@ document.getElementById("nav-popular-tab").addEventListener("click", () => {
 document.getElementById("search-button").addEventListener("click", searchEvent);
 
 fetchEvents("awaiting approval");
-account();
