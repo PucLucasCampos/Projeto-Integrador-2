@@ -1,3 +1,4 @@
+import { isModerador } from "./account.js";
 import {
   fetchData,
   calculateTimeRemaining,
@@ -45,6 +46,12 @@ const createCard = (event) => {
             Encerrar Apostas: ${calculateTimeRemaining(event.dataFim)}
             </div>
                 <button class="event-button">Apostar</button>
+                ${
+                  isModerador()
+                    ? `<button class="event-button">Avaliar</button>`
+                    : ""
+                }
+                
               </div>
      
     `;
@@ -67,8 +74,6 @@ export const fetchEvents = async (status) => {
     const data = await fetchData("/getEvents", "", "GET", {
       parametro: parametroAux,
     });
-
-    console.log(data);
 
     if (status === "mostBet") {
       const mostEventsBet = data.events.filter((item) => item.qtdApostas > 0);
@@ -104,19 +109,43 @@ const searchEvent = async (e) => {
   }
 };
 
-// Quando o usuario clicar no botão com o id "nav-ending-tab" buscar todos os evento do status "awaiting approval" e atualiza variavel aux
-document.getElementById("nav-ending-tab").addEventListener("click", () => {
-  fetchEvents("awaiting approval");
-  navTabActive = "card-ending";
-});
+const createEvent = (e) => {
+  e.preventDefault();
 
-// Quando o usuario clicar no botão com o id "nav-popular-tab" buscar todos os evento do status "mostBet" e atualiza variavel aux
-document.getElementById("nav-popular-tab").addEventListener("click", () => {
-  fetchEvents("mostBet");
-  navTabActive = "card-popular";
-});
+  const msgError = document.getElementById("erroCreateEvent");
 
-// Quando o usuario clicar no botão de pesquisar evento realizar a função de pesquisa
-document.getElementById("search-button").addEventListener("click", searchEvent);
+  try {
+    console.log("Criar Evento");
+  } catch (error) {
+    msgError.innerHTML = "Não foi possivel Criar Evento";
+  } finally {
+    setTimeout(() => {
+      msgError.innerHTML = "";
+    }, 1000);
+  }
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  const tabEnding = document.getElementById("nav-ending-tab");
+  const tabPopular = document.getElementById("nav-popular-tab");
+  const btnSearch = document.getElementById("search-button");
+  const formCreateEvent = document.getElementById("createEvent");
+
+  tabEnding &&
+    tabEnding.addEventListener("click", () => {
+      fetchEvents("awaiting approval");
+      navTabActive = "card-ending";
+    });
+
+  tabPopular &&
+    tabPopular.addEventListener("click", () => {
+      fetchEvents("mostBet");
+      navTabActive = "card-popular";
+    });
+
+  btnSearch && btnSearch.addEventListener("click", searchEvent);
+
+  formCreateEvent.addEventListener("submit", createEvent);
+});
 
 fetchEvents("awaiting approval");

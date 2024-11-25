@@ -13,7 +13,6 @@ const account = async () => {
       localStorage.setItem("usuario", JSON.stringify(usuario));
 
       document.getElementById("nome-user").innerHTML = `${usuario.name}`;
-
       const elementsBalance = document.querySelectorAll(".balance");
       elementsBalance.forEach((elemento) => {
         elemento.textContent = `${usuario.balance.toLocaleString("pt-BR", {
@@ -27,7 +26,7 @@ const account = async () => {
   }
 };
 
-function isModerador() {
+export function isModerador() {
   const account = JSON.parse(localStorage.getItem("usuario"));
 
   return account.role == "moderador" ? true : false;
@@ -40,8 +39,11 @@ const addFounds = async (e) => {
   const valorCredito = document.getElementById("valorCredito");
 
   try {
-    if (Number(valorCredito.value) <= 0) msgError = `Valor inválido`;
-    else {
+    const valor = parseFloat(valorCredito.value);
+
+    if (isNaN(valor) || valor <= 0) {
+      msgError.innerHTML = `Valor inválido`;
+    } else {
       const response = await fetchData("/addFunds", getCookie("token"), "PUT", {
         valorAdd: valorCredito.value,
       });
