@@ -42,6 +42,7 @@
         <main class="container main-content">
             <div class="betting-area">
                 <div class="wallet-section">
+                    <!-- Saldo Usuario -->
                     <div class="saldo-user">
                         <h3 class="text-d">Saldo Disponível</h3>
                         <div class="box-carteira">
@@ -119,50 +120,57 @@
 
                                         <div class="mb-3 d-flex align-items-center gap-3">
                                             <div class="form-check">
-                                                <input class="form-check-input" type="radio" name="flexRadioDefault" id="metodoPix" onclick="toggleFields()">
+                                                <input class="form-check-input" type="radio" name="flexRadioDefault"
+                                                    id="metodoPix" onclick="toggleFields()">
                                                 <label class="form-check-label" for="metodoPix">
                                                     PIX
                                                 </label>
                                             </div>
                                             <div class="form-check">
-                                                <input class="form-check-input" type="radio" name="flexRadioDefault" id="metodoBanco" checked onclick="toggleFields()">
+                                                <input class="form-check-input" type="radio" name="flexRadioDefault"
+                                                    id="metodoBanco" checked onclick="toggleFields()">
                                                 <label class="form-check-label" for="metodoBanco">
                                                     Conta Bancária
                                                 </label>
                                             </div>
                                         </div>
-                                        
-                                        <div id="contaBancaria"> 
+
+                                        <div id="contaBancaria">
                                             <div class="mb-3">
                                                 <label for="bancoNome" class="form-label">Nome do banco</label>
-                                                <input type="text" class="form-control" id="bancoNome" placeholder="Informe o nome do Banco">
+                                                <input type="text" class="form-control" id="bancoNome"
+                                                    placeholder="Informe o nome do Banco">
                                             </div>
-                                        
+
                                             <div class="mb-3">
                                                 <label for="agencia" class="form-label">Agencia</label>
-                                                <input type="number" class="form-control" id="agencia" placeholder="Informe a agencia">
+                                                <input type="number" class="form-control" id="agencia"
+                                                    placeholder="Informe a agencia">
                                             </div>
-                                        
+
                                             <div class="mb-3">
-                                                <label for="contaNumero" class="form-label">Número da Conta de Destino</label>
-                                                <input type="number" class="form-control" id="contaNumero" placeholder="Informe o número da conta corrente">
+                                                <label for="contaNumero" class="form-label">Número da Conta de
+                                                    Destino</label>
+                                                <input type="number" class="form-control" id="contaNumero"
+                                                    placeholder="Informe o número da conta corrente">
                                             </div>
                                         </div>
-                                        
-                                        <div id="pix" style="display: none;"> 
+
+                                        <div id="pix" style="display: none;">
                                             <div class="mb-3">
                                                 <label for="chavePix" class="form-label">Chave PIX</label>
-                                                <input type="text" class="form-control" id="chavePix" placeholder="Informe a chave PIX">
+                                                <input type="text" class="form-control" id="chavePix"
+                                                    placeholder="Informe a chave PIX">
                                             </div>
                                         </div>
-                                        
+
 
 
                                         <button type="submit" class="btn btn-warning">Confirmar</button>
                                     </form>
 
-                                     <!-- Mensagem erro (estilizar) -->
-                                     <div id="erroSaque">
+                                    <!-- Mensagem erro (estilizar) -->
+                                    <div id="erroSaque">
                                         <span>APAGAR ESSE TEXTO APÓS FAZER O ESTILO</span>
                                     </div>
                                 </div>
@@ -170,8 +178,7 @@
                         </div>
                     </div>
 
-
-
+                    <!-- Tab Historico Wallet -->
                     <ul class="nav nav-eventos-botao nav-eventos nav-tabs mb-3" id="pills-tab" role="tablist">
                         <li class="nav-item" role="presentation">
                             <button class="botao nav-link active" id="pills-historic-tab" data-bs-toggle="pill"
@@ -195,7 +202,9 @@
                         </li>
                     </ul>
 
+                    <!-- Table Historico Wallet -->
                     <div class="tab-content" id="pills-tabContent">
+                        <!-- Tab Historico -->
                         <div class="tab-pane fade show active" id="pills-historic" role="tabpanel"
                             aria-labelledby="pills-historic-tab">
                             <div class="history-section">
@@ -207,8 +216,8 @@
                                             <th class="text-d">Valor (R$)</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="text-w">
-                                        <tr>
+                                    <tbody class="text-w" id="tbody-historic">
+                                        <!-- <tr>
                                             <td>18/11/2024</td>
                                             <td>Crédito Adicionado</td>
                                             <td class="text-success">+100,00</td>
@@ -217,17 +226,13 @@
                                             <td>17/11/2024</td>
                                             <td>Aposta Realizada</td>
                                             <td class="text-danger">-50,00</td>
-                                        </tr>
-                                        <tr>
-                                            <td>16/11/2024</td>
-                                            <td>Saque Realizado</td>
-                                            <td class="text-danger">-30,00</td>
-                                        </tr>
+                                        </tr> -->
                                     </tbody>
                                 </table>
                             </div>
                         </div>
 
+                        <!-- Tab Deposito -->
                         <div class="tab-pane fade" id="pills-deposits" role="tabpanel"
                             aria-labelledby="pills-deposits-tab">
                             <div class="history-section">
@@ -241,18 +246,19 @@
                                                 <th class="text-d">Valor (R$)</th>
                                             </tr>
                                         </thead>
-                                        <tbody class="text-w">
-                                            <tr>
+                                        <tbody class="text-w" id="tbody-deposits">
+                                            <!-- <tr>
                                                 <td>18/11/2024</td>
                                                 <td>Crédito Adicionado</td>
                                                 <td class="text-success">+100,00</td>
-                                            </tr>
+                                            </tr> -->
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
                         </div>
 
+                        <!-- Tab Apostas -->
                         <div class="tab-pane fade" id="pills-bets" role="tabpanel" aria-labelledby="pills-bets-tab">
                             <div class="history-section">
                                 <div class="transaction">
@@ -265,19 +271,19 @@
                                                 <th class="text-d">Valor (R$)</th>
                                             </tr>
                                         </thead>
-                                        <tbody class="text-w">
-                                            <tr>
+                                        <tbody class="text-w" id="tbody-bets">
+                                            <!-- <tr>
                                                 <td>17/11/2024</td>
                                                 <td>Aposta Realizada</td>
                                                 <td class="text-danger">-50,00</td>
-                                            </tr>
-
+                                            </tr> -->
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
                         </div>
 
+                        <!-- Tab Saque -->
                         <div class="tab-pane fade" id="pills-withdraw" role="tabpanel"
                             aria-labelledby="pills-withdraw-tab">
                             <div class="history-section">
@@ -291,12 +297,12 @@
                                                 <th class="text-d">Valor (R$)</th>
                                             </tr>
                                         </thead>
-                                        <tbody class="text-w">
-                                            <tr>
+                                        <tbody class="text-w" id="tbody-withdraw">
+                                            <!-- <tr>
                                                 <td>16/11/2024</td>
                                                 <td>Saque Realizado</td>
                                                 <td class="text-danger">-30,00</td>
-                                            </tr>
+                                            </tr> -->
                                         </tbody>
                                     </table>
                                 </div>

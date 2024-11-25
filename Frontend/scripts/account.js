@@ -2,6 +2,8 @@ import { cookieStorage, fetchData } from "./utils/index.js";
 
 const { setCookie, getCookie } = cookieStorage();
 
+var navTabActive = "tbody-historic"; // "tbody-historic" | "tbody-deposits" | "tbody-bets" | "tbody-withdraw"
+
 // Buscar dados do usuário e atualizar na página
 const account = async () => {
   try {
@@ -87,7 +89,7 @@ const withdrawFunds = async (e) => {
             {
               valorSacar: valor,
               metodo: "pix",
-              chavePix: chavePix.value
+              chavePix: chavePix.value,
             }
           );
 
@@ -211,11 +213,116 @@ const login = async (e) => {
   }
 };
 
+/**
+ * Limpar tabela de historico para mostrar todos os historico atualizados
+ * @param {array} historico
+ */
+export const showHistory = async (historico) => {
+  const historicBody = document.getElementById(navTabActive);
+  historicBody.innerHTML = "";
+
+  if (historico) {
+    historico.map((item) => {
+      createRowHistoric(item);
+    });
+  }
+};
+
+// Mapeamento da descrição historico
+const rowDescricaoHistoric = {
+  saque: "Saque Realizado",
+  deposito: "Crédito Adicionado",
+  aposta: "Aposta Realizada",
+};
+
+/**
+ * Criar row do historico para aparecer na tela
+ * @param {object} historico
+ */
+const createRowHistoric = (historico) => {
+  const newRow = document.createElement("tr");
+
+  const data = new Date(historico.data).toLocaleDateString();
+
+  newRow.innerHTML = `
+            <td>${data}</td>
+            <td>${rowDescricaoHistoric[historico.descricao]}</td>
+            ${
+              historico.descricao == "deposito"
+                ? `<td class="text-success">${historico.valor.toLocaleString(
+                    "pt-BR",
+                    {
+                      style: "currency",
+                      currency: "BRL",
+                    }
+                  )}</td>`
+                : `<td class="text-danger">${historico.valor.toLocaleString(
+                    "pt-BR",
+                    {
+                      style: "currency",
+                      currency: "BRL",
+                    }
+                  )}</td>`
+            }
+     
+    `;
+
+  document.querySelector(`#${navTabActive}`).appendChild(newRow);
+};
+
+const fetchHistoryWallet = async (tipoTransacao) => {
+
+  console.log(tipoTransacao);
+
+  try {
+    const data = await fetchData("/historyWallet", getCookie("token"), "GET", {
+      parametro: tipoTransacao,
+    });
+
+    console.log(data, tipoTransacao);
+
+    showHistory(data.historico);
+  } catch (error) {
+    console.error("Erro ao buscar dados: ", error);
+  }
+};
+
+const history = async () => {
+  const pillsHistoric = document.getElementById("pills-historic-tab");
+  const pillsDeposits = document.getElementById("pills-deposits-tab");
+  const pillsBets = document.getElementById("pills-bets-tab");
+  const pillsWithdraw = document.getElementById("pills-withdraw-tab");
+
+  pillsHistoric &&
+    pillsHistoric.addEventListener("click", () => {
+      fetchHistoryWallet("historico");
+      navTabActive = "tbody-historic";
+    });
+  pillsDeposits &&
+    pillsDeposits.addEventListener("click", () => {
+      fetchHistoryWallet("deposito");
+      navTabActive = "tbody-deposits";
+    });
+  pillsBets &&
+    pillsBets.addEventListener("click", () => {
+      fetchHistoryWallet("aposta");
+      navTabActive = "tbody-bets";
+    });
+  pillsWithdraw &&
+    pillsWithdraw.addEventListener("click", () => {
+      fetchHistoryWallet("saque");
+      navTabActive = "tbody-withdraw";
+    });
+
+  fetchHistoryWallet("historico");
+};
+
 document.addEventListener("DOMContentLoaded", () => {
   const btnCadastro = document.getElementById("btnCadastro");
   const btnLogin = document.getElementById("btnLogin");
   const modalAddFounds = document.getElementById("addFounds");
   const modalWithdrawFunds = document.getElementById("withdrawFunds");
+  const tableHistory = document.getElementById("pills-tabContent");
 
   if (btnCadastro) {
     btnCadastro.addEventListener("click", signUp);
@@ -232,6 +339,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (modalWithdrawFunds) {
     modalWithdrawFunds.addEventListener("submit", withdrawFunds);
   }
+
+  if (tableHistory) history();
 });
 
 account();

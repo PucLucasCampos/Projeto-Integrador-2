@@ -507,9 +507,11 @@ export namespace WalletHandler {
       connection = await OracleDB.getConnection(dbConfig);
 
       if (req.account && req.account.walletId) {
-        const walletId = req.account.walletId
+        const walletId = req.account.walletId;
 
-        const sql: string = `
+        const parametro = req.get("parametro");
+
+        var sql: string = `
       SELECT 
           ID as "id",
           DATATRANSFERENCIA AS "data",
@@ -519,15 +521,29 @@ export namespace WalletHandler {
       WHERE WALLETID = :walletId
       `;
 
-        const result = (await connection.execute(sql, [walletId]))
-          .rows as HistoricoWallet[];
+        if (parametro && parametro.toString().trim() != "historico") {
+          sql += `AND TIPOTRANSACAO = :parametro`;
 
-        res.status(200).send({
-          code: res.statusCode,
-          walletId: walletId,
-          msg: "Resultado do historico wallet",
-          usuarios: result,
-        });
+          const result = (await connection.execute(sql, [walletId, parametro]))
+            .rows as HistoricoWallet[];
+
+          res.status(200).send({
+            code: res.statusCode,
+            walletId: walletId,
+            msg: "Resultado do historico wallet",
+            historico: result,
+          });
+        } else {
+          const result = (await connection.execute(sql, [walletId]))
+            .rows as HistoricoWallet[];
+
+          res.status(200).send({
+            code: res.statusCode,
+            walletId: walletId,
+            msg: "Resultado do historico wallet",
+            historico: result,
+          });
+        }
       }
     } catch (err) {
       console.error(err);
