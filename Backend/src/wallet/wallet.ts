@@ -14,6 +14,16 @@ export namespace WalletHandler {
   };
 
   /*
+    Tipo HistoricoWallet
+  */
+  type HistoricoWallet = {
+    id: number;
+    data: Date;
+    descricao: string;
+    valor: number;
+  };
+
+  /*
     Função para adicionar fundos a wallet
    */
   async function addFundsWallet(
@@ -481,6 +491,54 @@ export namespace WalletHandler {
         code: res.statusCode,
         msg: "Usuário moderador não pode apostar",
       });
+    }
+  };
+
+  /*
+   Função para lidar com a requisição de historico wallet
+  */
+  export const hitoricoWalletHandler: RequestHandler = async (
+    req: CustomRequest,
+    res: Response
+  ) => {
+    let connection;
+
+    try {
+      connection = await OracleDB.getConnection(dbConfig);
+
+      if (req.account && req.account.walletId) {
+        const walletId = req.account.walletId
+
+        const sql: string = `
+      SELECT 
+          ID as "id",
+          DATATRANSFERENCIA AS "data",
+          TIPOTRANSACAO AS "descricao",
+          VALORADD AS "valor"
+      FROM historico_wallet
+      WHERE WALLETID = :walletId
+      `;
+
+        const result = (await connection.execute(sql, [walletId]))
+          .rows as HistoricoWallet[];
+
+        res.status(200).send({
+          code: res.statusCode,
+          walletId: walletId,
+          msg: "Resultado do historico wallet",
+          usuarios: result,
+        });
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
     }
   };
 }
