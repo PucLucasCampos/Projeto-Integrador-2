@@ -2,8 +2,6 @@ import e, { Request, RequestHandler, Response } from "express";
 import OracleDB from "oracledb";
 import { dbConfig } from "../dbConfig";
 import { CustomRequest } from "../types";
-import { AccountsHandler } from "../accounts/accounts";
-import { resolve } from "path";
 import { sendEmail } from "../utils";
 
 export namespace EventHandler {
@@ -36,11 +34,11 @@ export namespace EventHandler {
 
     try {
       connection = await OracleDB.getConnection(dbConfig);
-
+    
       const eParam = req.get("parametro");
-
-      var sql = `
-         SELECT 
+    
+      let sql = `
+        SELECT 
             E.ID AS "id",
             E.TITULO AS "titulo",
             E.DESCRICAO AS "descricao",
@@ -53,68 +51,60 @@ export namespace EventHandler {
             A.EMAIL AS "email",
             COUNT(B.ID) AS "qtdApostas",
             COALESCE(SUM(B.VALOR), 0) AS "valorApostado"
-         FROM EVENTS E
+        FROM EVENTS E
             JOIN ACCOUNTS A ON A.ID = E.ACCOUNTSID
             LEFT JOIN BETS B ON B.EVENTOID = E.ID
-         `;
-
-      // if (
-      //   eParam == "awaiting approval" ||
-      //   eParam == "already occurred" ||
-      //   eParam == "deleted" ||
-      //   eParam == "approved" ||
-      //   eParam == "closed"
-      // ) {
+      `;
+    
       if (eParam) {
-        sql += `
-          WHERE 
-            E.STATUS = :param
-         GROUP BY 
-            E.ID, E.TITULO, E.DESCRICAO, E.VALORCOTA, E.DATAINICIO, E.DATAFIM, E.STATUS,
-            A.ID, A.NAME, A.EMAIL
-        `;
-
-        const result: Event[] | unknown = (
-          await connection.execute(sql, [eParam])
-        ).rows;
-        res.status(200).send({
-          code: res.statusCode,
-          msg: "Resultado da busca Eventos",
-          events: result,
-        });
-      } else {
-        sql += `
-        GROUP BY 
-            E.ID, E.TITULO, E.DESCRICAO, E.VALORCOTA, E.DATAINICIO, E.DATAFIM, E.STATUS,
-            A.ID, A.NAME, A.EMAIL
-            `;
-
-        const result: Event[] | unknown = (await connection.execute(sql)).rows;
-        res.status(200).send({
-          code: res.statusCode,
-          msg: "Resultado da busca Eventos",
-          events: result,
-        });
+        if (eParam === "ending") {
+          sql += `WHERE E.DATAFIM >= CURRENT_DATE `;
+        } else if (eParam === "popular") {
+          sql += `HAVING COUNT(B.ID) > 0 `;
+        } else {
+          sql += `WHERE E.STATUS = :param `;
+        }
       }
-
-      // } else {
-      //   res.status(400).send({
-      //     code: res.statusCode,
-      //     msg: "Parametro não econtrado",
-      //   });
-      //   return;
-      // }
+    
+      sql += `
+      GROUP BY 
+          E.ID, E.TITULO, E.DESCRICAO, E.VALORCOTA, E.DATAINICIO, E.DATAFIM, E.STATUS,
+          A.ID, A.NAME, A.EMAIL
+      ORDER BY 
+          COUNT(B.ID) DESC, 
+          E.DATAFIM DESC  
+    `;
+    
+      let result;
+      if (eParam && eParam !== "ending" && eParam !== "popular") {
+        result = (await connection.execute(sql, [eParam])).rows;
+      } else {
+        result = (await connection.execute(sql)).rows;
+      }
+    
+      res.status(200).send({
+        code: res.statusCode,
+        search: eParam,
+        msg: "Resultado da busca Eventos",
+        events: result,
+      });
+    
     } catch (err) {
       console.log(err);
+      res.status(500).send({
+        code: 500,
+        msg: "Erro interno do servidor",
+      });
     } finally {
       if (connection) {
         try {
           await connection.close();
         } catch (err) {
-          console.log(err);
+          console.log("Erro ao fechar a conexão", err);
         }
       }
     }
+    
   };
 
   export const postAddEventRoute: RequestHandler = async (

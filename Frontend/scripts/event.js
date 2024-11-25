@@ -59,29 +59,24 @@ const createCard = (event) => {
   document.querySelector(`#${navTabActive}`).appendChild(newCard);
 };
 
+const fetchEventsTab = {
+  "card-ending": "ending",
+  "card-popular": "popular",
+};
+
 /**
  * Buscar todos os eventos de acordo com o status dele no backend
  * @param {string} status "awaiting approval" | "closed"...
  */
 export const fetchEvents = async (status) => {
   try {
-    var parametroAux = "";
-
-    if (status != "mostBet") {
-      parametroAux = status;
-    }
+    console.log(fetchEventsTab[navTabActive], navTabActive);
 
     const data = await fetchData("/getEvents", "", "GET", {
-      parametro: parametroAux,
+      parametro: status ? status : fetchEventsTab[navTabActive],
     });
 
-    if (status === "mostBet") {
-      const mostEventsBet = data.events.filter((item) => item.qtdApostas > 0);
-
-      showEvents(mostEventsBet);
-    } else {
-      showEvents(data.events);
-    }
+    showEvents(data.events);
   } catch (error) {
     console.error("Erro ao buscar dados:", error);
   }
@@ -133,14 +128,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   tabEnding &&
     tabEnding.addEventListener("click", () => {
-      fetchEvents("awaiting approval");
       navTabActive = "card-ending";
+      fetchEvents();
     });
 
   tabPopular &&
     tabPopular.addEventListener("click", () => {
-      fetchEvents("mostBet");
       navTabActive = "card-popular";
+      fetchEvents();
     });
 
   btnSearch && btnSearch.addEventListener("click", searchEvent);
@@ -148,4 +143,4 @@ document.addEventListener("DOMContentLoaded", () => {
   formCreateEvent.addEventListener("submit", createEvent);
 });
 
-fetchEvents("awaiting approval");
+fetchEvents();
