@@ -60,14 +60,22 @@ const createCardEvent = (event) => {
             <div class="event-time">
             Encerrar Apostas: ${calculateTimeRemaining(event.dataFim)}
             </div>
-                <button class="event-button">Apostar</button>
+             <div class="event-status">
+           Status: ${event.status}
+            </div>
+            ${
+              event.status == "approved"
+                ? '<button class="event-button">Apostar</button>'
+                : ""
+            }
                 ${
                   isModerador()
                     ? `<button class="event-button">Avaliar</button>`
                     : ""
                 }
-                
               </div>
+
+             
      
     `;
 
@@ -79,13 +87,17 @@ const createCardEvent = (event) => {
  * @param {object} categoria
  */
 const createCardCategory = (category) => {
-  const newCard = document.createElement("div");
+  const newCard = document.createElement("a");
+
+  newCard.href = `categoria.html?category=${category.id}`;
 
   newCard.innerHTML = `
     <div class="category-card">
       <div class="category-icon">🏅</div>
       <div class="text-b">${category.nome}</div>
-      <div class="category-count">${category.qtdEventos.toString().padStart(2, "0")} eventos</div>
+      <div class="category-count">${category.qtdEventos
+        .toString()
+        .padStart(2, "0")} eventos</div>
     </div>
     `;
 

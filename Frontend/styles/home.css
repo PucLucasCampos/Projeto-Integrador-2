@@ -104,6 +104,11 @@
     gap: 1rem;
 }
 
+.category-cards a {
+    text-decoration: none;
+}
+
+
 .category-card {
     background-color: #DDD4B6;
     border-radius: 10px;

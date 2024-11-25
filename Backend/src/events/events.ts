@@ -36,6 +36,7 @@ export namespace EventHandler {
       connection = await OracleDB.getConnection(dbConfig);
 
       const eParam = req.get("parametro");
+      const eCategory = req.get("categoria");
 
       let sql = `
         SELECT 
@@ -56,31 +57,45 @@ export namespace EventHandler {
             LEFT JOIN BETS B ON B.EVENTOID = E.ID
       `;
 
+      const conditions = [];
+      const params: Record<string, string> = {};
+
       if (eParam) {
         if (eParam === "ending") {
-          sql += `WHERE E.DATAFIM >= CURRENT_DATE `;
+          conditions.push("E.DATAFIM >= CURRENT_DATE");
         } else if (eParam === "popular") {
-          sql += `HAVING COUNT(B.ID) > 0 `;
         } else {
-          sql += `WHERE E.STATUS = :param `;
+          conditions.push("E.STATUS = :param");
+          params.param = eParam;
         }
       }
 
-      sql += `
-      GROUP BY 
-          E.ID, E.TITULO, E.DESCRICAO, E.VALORCOTA, E.DATAINICIO, E.DATAFIM, E.STATUS,
-          A.ID, A.NAME, A.EMAIL
-      ORDER BY 
-          COUNT(B.ID) DESC, 
-          E.DATAFIM DESC  
-    `;
-
-      let result;
-      if (eParam && eParam !== "ending" && eParam !== "popular") {
-        result = (await connection.execute(sql, [eParam])).rows;
-      } else {
-        result = (await connection.execute(sql)).rows;
+      if (eCategory) {
+        conditions.push("E.FK_ID_CATEGORY = :categoria");
+        params.categoria = eCategory;
       }
+
+      if (conditions.length > 0) {
+        sql += `WHERE ${conditions.join(" AND ")} `;
+      }
+
+      sql += `
+  GROUP BY 
+      E.ID, E.TITULO, E.DESCRICAO, E.VALORCOTA, E.DATAINICIO, E.DATAFIM, E.STATUS,
+      A.ID, A.NAME, A.EMAIL
+`;
+
+      if (eParam === "popular") {
+        sql += `HAVING COUNT(B.ID) > 0 `;
+      }
+
+      sql += `
+  ORDER BY 
+      COUNT(B.ID) DESC, 
+      E.DATAFIM DESC
+`;
+
+      const result = (await connection.execute(sql, params)).rows;
 
       res.status(200).send({
         code: res.statusCode,
