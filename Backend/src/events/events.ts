@@ -26,7 +26,7 @@ export namespace EventHandler {
     choice: number;
   };
 
-  export const getAllEvents = async (
+  export const getAllEvents: RequestHandler = async (
     req: Request,
     res: Response
   ): Promise<void> => {
@@ -34,9 +34,9 @@ export namespace EventHandler {
 
     try {
       connection = await OracleDB.getConnection(dbConfig);
-    
+
       const eParam = req.get("parametro");
-    
+
       let sql = `
         SELECT 
             E.ID AS "id",
@@ -55,7 +55,7 @@ export namespace EventHandler {
             JOIN ACCOUNTS A ON A.ID = E.ACCOUNTSID
             LEFT JOIN BETS B ON B.EVENTOID = E.ID
       `;
-    
+
       if (eParam) {
         if (eParam === "ending") {
           sql += `WHERE E.DATAFIM >= CURRENT_DATE `;
@@ -65,7 +65,7 @@ export namespace EventHandler {
           sql += `WHERE E.STATUS = :param `;
         }
       }
-    
+
       sql += `
       GROUP BY 
           E.ID, E.TITULO, E.DESCRICAO, E.VALORCOTA, E.DATAINICIO, E.DATAFIM, E.STATUS,
@@ -74,21 +74,20 @@ export namespace EventHandler {
           COUNT(B.ID) DESC, 
           E.DATAFIM DESC  
     `;
-    
+
       let result;
       if (eParam && eParam !== "ending" && eParam !== "popular") {
         result = (await connection.execute(sql, [eParam])).rows;
       } else {
         result = (await connection.execute(sql)).rows;
       }
-    
+
       res.status(200).send({
         code: res.statusCode,
         search: eParam,
         msg: "Resultado da busca Eventos",
         events: result,
       });
-    
     } catch (err) {
       console.log(err);
       res.status(500).send({
@@ -104,7 +103,6 @@ export namespace EventHandler {
         }
       }
     }
-    
   };
 
   export const postAddEventRoute: RequestHandler = async (
@@ -192,7 +190,7 @@ export namespace EventHandler {
     }
   };
 
-  export const deleteEvent = async (
+  export const deleteEvent: RequestHandler = async (
     req: CustomRequest,
     res: Response
   ): Promise<void> => {
@@ -247,7 +245,7 @@ export namespace EventHandler {
     }
   };
 
-  export const evaluateNewEvent = async (
+  export const evaluateNewEvent: RequestHandler = async (
     req: CustomRequest,
     res: Response
   ): Promise<void> => {
@@ -368,7 +366,7 @@ export namespace EventHandler {
     return false;
   }
 
-  export const finishEvent = async (
+  export const finishEvent: RequestHandler = async (
     req: CustomRequest,
     res: Response
   ): Promise<void> => {
@@ -512,7 +510,7 @@ export namespace EventHandler {
     }
   }
 
-  export const searchEvent = async (
+  export const searchEvent: RequestHandler = async (
     req: Request,
     res: Response
   ): Promise<void> => {
@@ -579,6 +577,48 @@ export namespace EventHandler {
           await connection.close();
         } catch (err) {
           console.log(err);
+        }
+      }
+    }
+  };
+
+  export const getCategory = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    let connection;
+
+    try {
+      connection = await OracleDB.getConnection(dbConfig);
+
+      let sql = `
+      SELECT C.ID_CATEGORY AS "id", C.NOME AS "nome", COUNT(E.ID) AS "qtdEventos"
+      FROM CATEGORY C
+          JOIN EVENTS E ON E.FK_ID_CATEGORY = C.ID_CATEGORY
+      GROUP BY
+          C.ID_CATEGORY,
+          C.NOME
+      `;
+
+      const result = (await connection.execute(sql)).rows;
+
+      res.status(200).send({
+        code: res.statusCode,
+        msg: "Resultado da busca Categorias",
+        categoria: result,
+      });
+    } catch (err) {
+      console.log(err);
+      res.status(500).send({
+        code: 500,
+        msg: "Erro interno do servidor",
+      });
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.log("Erro ao fechar a conexão", err);
         }
       }
     }

@@ -42,6 +42,7 @@ routes.get("/getAccount", AccountsHandler.verifyToken, AccountsHandler.getAccoun
 routes.post("/addNewEvent", AccountsHandler.verifyToken, EventHandler.postAddEventRoute);
 
 routes.get("/getEvents", EventHandler.getAllEvents);
+routes.get("/getCategory", EventHandler.getCategory);
 
 routes.delete("/deleteEvent", AccountsHandler.verifyToken, EventHandler.deleteEvent);
 
