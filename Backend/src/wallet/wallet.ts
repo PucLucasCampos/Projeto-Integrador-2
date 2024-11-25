@@ -38,6 +38,8 @@ export namespace WalletHandler {
       ).rowsAffected;
 
       if (result && result > 0) {
+        await createHistoricoWallet(valorAdd, walletId, "deposito");
+
         return true;
       }
     } catch (err) {
@@ -271,7 +273,10 @@ export namespace WalletHandler {
                 }
               );
 
-              const success = await withdrawFundsWallet(walletId, Number(valorSacar));
+              const success = await withdrawFundsWallet(
+                walletId,
+                Number(valorSacar)
+              );
 
               if (result && success) {
                 res.status(200).send({
@@ -291,7 +296,7 @@ export namespace WalletHandler {
               msg: "Parametros invalidos",
             });
           }
-        } else if(metodo.toLocaleLowerCase() == "pix"){
+        } else if (metodo.toLocaleLowerCase() == "pix") {
           const chavePix = req.get("chavePix");
 
           if (chavePix) {
@@ -325,8 +330,10 @@ export namespace WalletHandler {
                 }
               );
 
-
-              const success = await withdrawFundsWallet(walletId, Number(valorSacar));
+              const success = await withdrawFundsWallet(
+                walletId,
+                Number(valorSacar)
+              );
 
               if (result && success) {
                 res.status(200).send({
@@ -347,12 +354,11 @@ export namespace WalletHandler {
             });
           }
         } else {
-            res.status(500).send({
+          res.status(500).send({
             code: res.statusCode,
             msg: "Erro ao retirar fundos.",
           });
         }
-
       } else {
         res.status(400).send({
           code: res.statusCode,
