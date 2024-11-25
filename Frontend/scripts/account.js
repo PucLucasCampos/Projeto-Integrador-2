@@ -64,6 +64,86 @@ const addFounds = async (e) => {
   }
 };
 
+const withdrawFunds = async (e) => {
+  e.preventDefault();
+
+  const msgError = document.getElementById("erroSaque");
+  const valorSaque = document.getElementById("valorSaque");
+
+  try {
+    const valor = parseFloat(valorSaque.value);
+
+    if (isNaN(valor) || valor <= 0) {
+      msgError.innerHTML = `Valor inválido`;
+    } else {
+      if (document.getElementById("metodoPix").checked) {
+        const chavePix = document.getElementById("chavePix");
+
+        if (chavePix.value) {
+          const response = await fetchData(
+            "/withdrawFunds",
+            getCookie("token"),
+            "PUT",
+            {
+              valorSacar: valor,
+              metodo: "pix",
+              chavePix: chavePix.value
+            }
+          );
+
+          if (response.code == 200) {
+            account();
+            chavePix.value = "0";
+          }
+
+          msgError.innerHTML = response.msg;
+        } else {
+          msgError.innerHTML = "Parametros invalidos";
+        }
+      } else {
+        const bancoNome = document.getElementById("bancoNome");
+        const agencia = document.getElementById("agencia");
+        const contaNumero = document.getElementById("contaNumero");
+
+        if (bancoNome.value && agencia.value && contaNumero.value) {
+          const response = await fetchData(
+            "/withdrawFunds",
+            getCookie("token"),
+            "PUT",
+            {
+              valorSacar: valor,
+              metodo: "banco",
+              bancoNome: bancoNome.value,
+              agencia: agencia.value,
+              contaNumero: contaNumero.value,
+            }
+          );
+
+          if (response.code == 200) {
+            account();
+            bancoNome.value = "";
+            agencia.value = "0";
+            contaNumero.value = "0";
+          }
+
+          msgError.innerHTML = response.msg;
+        } else {
+          msgError.innerHTML = "Parametros invalidos";
+        }
+      }
+    }
+  } catch (error) {
+    msgError.innerHTML = `Não foi possivel retirar fundos`;
+    console.error("Não foi possivel retirar fundos", error);
+  } finally {
+    valorSaque.value = "0";
+
+    setTimeout(() => {
+      msgError.innerHTML = "";
+    }, 1000);
+  }
+};
+
 const signUp = async (e) => {
   e.preventDefault();
 
@@ -135,6 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnCadastro = document.getElementById("btnCadastro");
   const btnLogin = document.getElementById("btnLogin");
   const modalAddFounds = document.getElementById("addFounds");
+  const modalWithdrawFunds = document.getElementById("withdrawFunds");
 
   if (btnCadastro) {
     btnCadastro.addEventListener("click", signUp);
@@ -146,6 +227,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (modalAddFounds) {
     modalAddFounds.addEventListener("submit", addFounds);
+  }
+
+  if (modalWithdrawFunds) {
+    modalWithdrawFunds.addEventListener("submit", withdrawFunds);
   }
 });
 

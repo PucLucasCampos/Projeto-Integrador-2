@@ -271,7 +271,9 @@ export namespace WalletHandler {
                 }
               );
 
-              if (result) {
+              const success = await withdrawFundsWallet(walletId, Number(valorSacar));
+
+              if (result && success) {
                 res.status(200).send({
                   code: res.statusCode,
                   msg: "Fundos retirados com sucesso!",
@@ -289,7 +291,7 @@ export namespace WalletHandler {
               msg: "Parametros invalidos",
             });
           }
-        } else {
+        } else if(metodo.toLocaleLowerCase() == "pix"){
           const chavePix = req.get("chavePix");
 
           if (chavePix) {
@@ -323,7 +325,10 @@ export namespace WalletHandler {
                 }
               );
 
-              if (result) {
+
+              const success = await withdrawFundsWallet(walletId, Number(valorSacar));
+
+              if (result && success) {
                 res.status(200).send({
                   code: res.statusCode,
                   msg: "Fundos retirados com sucesso!",
@@ -341,21 +346,13 @@ export namespace WalletHandler {
               msg: "Parametros invalidos",
             });
           }
+        } else {
+            res.status(500).send({
+            code: res.statusCode,
+            msg: "Erro ao retirar fundos.",
+          });
         }
 
-        // const success = await withdrawFundsWallet(walletId, Number(valorSacar));
-
-        // if (success) {
-        //   res.status(200).send({
-        //     code: res.statusCode,
-        //     msg: "Fundos retirados com sucesso!",
-        //   });
-        // } else {
-        //   res.status(500).send({
-        //     code: res.statusCode,
-        //     msg: "Erro ao retirar fundos.",
-        //   });
-        // }
       } else {
         res.status(400).send({
           code: res.statusCode,

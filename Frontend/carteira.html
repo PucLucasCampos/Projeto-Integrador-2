@@ -62,7 +62,7 @@
                         </button>
                     </div>
 
-                    <!-- Adicionar Creditos -->
+                    <!-- Modal Adicionar Creditos -->
                     <div class="modal fade" id="adicionarCreditoModal" tabindex="-1"
                         aria-labelledby="adicionarCreditoModalLabel" aria-hidden="true">
                         <div class="modal-dialog">
@@ -99,7 +99,7 @@
                         </div>
                     </div>
 
-                    <!-- Sacar Saldo -->
+                    <!-- Modal Sacar Saldo -->
                     <div class="modal fade" id="sacarSaldoModal" tabindex="-1" aria-labelledby="sacarSaldoModalLabel"
                         aria-hidden="true">
                         <div class="modal-dialog">
@@ -110,19 +110,61 @@
                                         aria-label="Fechar"></button>
                                 </div>
                                 <div class="modal-body">
-                                    <form>
+                                    <form id="withdrawFunds" action="">
                                         <div class="mb-3">
                                             <label for="valorSaque" class="form-label">Valor</label>
                                             <input type="number" class="form-control" id="valorSaque"
-                                                placeholder="Insira o valor">
+                                                placeholder="Insira o valor" min="0" value="0">
                                         </div>
-                                        <div class="mb-3">
-                                            <label for="contaDestino" class="form-label">Conta de Destino</label>
-                                            <input type="text" class="form-control" id="contaDestino"
-                                                placeholder="Informe a conta">
+
+                                        <div class="mb-3 d-flex align-items-center gap-3">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="flexRadioDefault" id="metodoPix" onclick="toggleFields()">
+                                                <label class="form-check-label" for="metodoPix">
+                                                    PIX
+                                                </label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="flexRadioDefault" id="metodoBanco" checked onclick="toggleFields()">
+                                                <label class="form-check-label" for="metodoBanco">
+                                                    Conta Bancária
+                                                </label>
+                                            </div>
                                         </div>
+                                        
+                                        <div id="contaBancaria"> 
+                                            <div class="mb-3">
+                                                <label for="bancoNome" class="form-label">Nome do banco</label>
+                                                <input type="text" class="form-control" id="bancoNome" placeholder="Informe o nome do Banco">
+                                            </div>
+                                        
+                                            <div class="mb-3">
+                                                <label for="agencia" class="form-label">Agencia</label>
+                                                <input type="number" class="form-control" id="agencia" placeholder="Informe a agencia">
+                                            </div>
+                                        
+                                            <div class="mb-3">
+                                                <label for="contaNumero" class="form-label">Número da Conta de Destino</label>
+                                                <input type="number" class="form-control" id="contaNumero" placeholder="Informe o número da conta corrente">
+                                            </div>
+                                        </div>
+                                        
+                                        <div id="pix" style="display: none;"> 
+                                            <div class="mb-3">
+                                                <label for="chavePix" class="form-label">Chave PIX</label>
+                                                <input type="text" class="form-control" id="chavePix" placeholder="Informe a chave PIX">
+                                            </div>
+                                        </div>
+                                        
+
+
                                         <button type="submit" class="btn btn-warning">Confirmar</button>
                                     </form>
+
+                                     <!-- Mensagem erro (estilizar) -->
+                                     <div id="erroSaque">
+                                        <span>APAGAR ESSE TEXTO APÓS FAZER O ESTILO</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -270,10 +312,33 @@
                     const modalAddFounds = document.getElementById("adicionarCreditoModal");
                     const valorCreditoInput = document.getElementById("valorCredito");
 
+
+                    const modalWithdrawFunds = document.getElementById("sacarSaldoModal");
+                    const valorSaque = document.getElementById("valorSaque");
+
                     // Adicionar evento ao modal quando ele for mostrado
                     modalAddFounds.addEventListener("shown.bs.modal", () => {
                         valorCreditoInput.focus();
-                    }); 
+                    });
+
+                    modalWithdrawFunds.addEventListener("shown.bs.modal", () => {
+                        valorSaque.focus();
+                    });
+
+                    function toggleFields() {
+                        const contaBancaria = document.getElementById('contaBancaria');
+                        const pix = document.getElementById('pix');
+
+                        if (document.getElementById('metodoPix').checked) {
+                            contaBancaria.style.display = 'none';
+                            pix.style.display = 'block';
+                        } else {
+                            contaBancaria.style.display = 'block';
+                            pix.style.display = 'none';
+                        }
+                    }
+
+                    window.onload = toggleFields;
                 </script>
 </body>
 
