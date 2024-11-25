@@ -79,6 +79,8 @@ const createCardEvent = (event) => {
      
     `;
 
+
+
   document.querySelector(`#${navTabActive}`).appendChild(newCard);
 };
 
@@ -115,11 +117,16 @@ const fetchEventsTab = {
  */
 export const fetchEvents = async (status) => {
   try {
-    console.log(fetchEventsTab[navTabActive], navTabActive);
+    const urlParams = new URLSearchParams(window.location.search);
+    const categoria = urlParams.get("category")
 
-    const data = await fetchData("/getEvents", "", "GET", {
+    const params = {
       parametro: status ? status : fetchEventsTab[navTabActive],
-    });
+    }
+
+    Object.assign(params, categoria && {categoria})
+
+    const data = await fetchData("/getEvents", "", "GET", params);
 
     showEvents(data.events);
   } catch (error) {
@@ -205,7 +212,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   btnSearch && btnSearch.addEventListener("click", searchEvent);
 
-  formCreateEvent.addEventListener("submit", createEvent);
+  formCreateEvent && formCreateEvent.addEventListener("submit", createEvent);
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const categoria = urlParams.get("category")
+
+  if(categoria) {
+    navTabActive = "card-category"
+  }
 });
 
 fetchEvents();

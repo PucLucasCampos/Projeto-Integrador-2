@@ -13,6 +13,8 @@
 </head>
 
 <body>
+
+  <!-- Header -->
   <nav class="navbar navbar-expand-lg navbar-light sticky-top ">
     <div class="container-fluid">
       <img class="minilogo" src="assets/tkzin.png">
@@ -30,67 +32,38 @@
         </ul>
       </div>
       <div class="user-saldo">
-        <div class="saldo" id="saldo-user">R$ SALDO DO USUARIO</div>
-        <div class="text-w" id="nome-user">NOME DO USUARIO</div><!--(COLOCAR NOME EM MAIUSCULO)-->
+        <div class="saldo balance" id="saldo-user">R$ SALDO DO USUARIO</div>
+        <div class="text-w" id="nome-user">NOME DO USUARIO</div>
       </div>
     </div>
   </nav>
 
   <center>
-  <main class="container main-content">
-    <div class="betting-area">
+    <main class="container main-content">
+      <div class="betting-area">
         <div class="search-container">
-            <form class="search-box">
+          <form class="search-box">
             <input type="text" class="search-input" id="search-input" placeholder="Busque eventos">
             <button type="submit" class="search-button" id="search-button">Buscar</button>
-            </form>
+          </form>
         </div>
-    <!--    NO DOCUMENTO NN TA FALANDO NADA SOBRE TER QUE MOSTRAR OS QUE JA FORAM FEITOS, 
-            MAS EU DEIXEI AQUI SÓ PRA CASO PRECISE, NN SEI SE TA CERTO ISSO AQUI
-            NA MINHA CABEÇA O USUARIO PESQUISA O EVENTO E ELE APARECE NESSA PAGINA, ENTT VOA LEK
 
-      <div class="events-section">
-        <h2 class="text-w section-title">EVENTOS</h2>
-        <nav>
-          <center>
-          <div class="nav nav-eventos-botao nav-eventos nav-tabs mb-3" id="nav-tab" role="tablist">
-            <button class="botao nav-link active" id="nav-events-tab" data-bs-toggle="tab" data-bs-target="#nav-events"
-              type="button" role="tab" aria-controls="nav-events" aria-selected="true">Próximos a encerrar
-            </button>
-
-            <button class="nav-link" id="nav-apostado-tab" data-bs-toggle="tab" data-bs-target="#nav-apostado"
-              type="button" role="tab" aria-controls="nav-apostado" aria-selected="false">Mais Apostado</button>
-          </div>
-        </nav>
 
         <div class="tab-content" id="nav-tabContent">
-          <div class="tab-pane fade active show" id="nav-events" role="tabpanel" aria-labelledby="nav-events-tab">
-            <div class="event-grid" id="card-events"></div>
-          </div>
-
-          <div class="tab-pane fade" id="nav-apostado" role="tabpanel" aria-labelledby="nav-apostado-tab">
-            <div class="event-grid" id="card-apostado"></div>
+          <div class="event-grid" id="card-category">
+            <!-- <div class="event-card">
+            <div class="event-title">NOME APOSTA</div>
+            <div class="event-text">QUANTAS APOSTAS REALIZADAS</div>
+            <button class="event-button">Apostar</button>
+          </div> -->
           </div>
         </div>
-    
-        <h2 class="section-title text-w">Todos os Eventos</h2>
-        <div class="category-cards">
-          <div class="category-card">
-            <div class="category-icon">🏅</div>
-            <div class="category-name">Olimpíadas (NOME CATEGORIA)</div>
-            <div class="category-count">23 eventos (QUANTIDADE EVENTO DA CATEGORIA)</div>
-          </div>
-          <div class="category-card">
-            <div class="category-icon">📊</div>
-            <div class="category-name">Olimpíadas (NOME CATEGORIA)</div>
-            <div class="category-count">45 eventos (QUANTIDADE EVENTO DA CATEGORIA)</div>
-          </div>
-        </div>  
--->
+
       </div>
-    </div>
-  </main>
+      </div>
+    </main>
 </body>
-<script type="module" src="./scripts/index.js"></script>
+<script type="module" src="./scripts/account.js"></script>
+<script type="module" src="./scripts/event.js"></script>
 
 </html>
