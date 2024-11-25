@@ -68,6 +68,8 @@ routes.put(
     WalletHandler.withdrawFundsHandler
 );
 
+routes.get("/historyWallet", AccountsHandler.verifyToken, WalletHandler.hitoricoWalletHandler);
+
 routes.post(
   "/betOnEvent",
   AccountsHandler.verifyToken,
