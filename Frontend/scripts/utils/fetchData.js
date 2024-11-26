@@ -44,6 +44,10 @@ export const fetchData = async (endpoint, token, method, header, body) => {
       body
     });
 
+    if(response.status === 422){
+      throw new Error("Usuario menor de 18!");
+    }
+
     if (!response.ok) {
       throw new Error("Falhou a requisição");
     }

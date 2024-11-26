@@ -231,8 +231,8 @@ export namespace AccountsHandler {
                   msg: "Data de Aniversario Invalida.",
                });
                return;
-            } else if (birthdayDate.getFullYear() - currentDate.getFullYear() < 18) {
-              res.status(400).send({
+            } else if (currentDate.getFullYear() - birthdayDate.getFullYear() < 18) {
+              res.status(422).send({
                 code: res.statusCode,
                 msg: "Usuario menor de 18!",
              });
@@ -291,7 +291,7 @@ export namespace AccountsHandler {
                   msg: "Usuário criado com sucesso!",
                });
             } else {
-               res.status(200).send({
+               res.status(409).send({
                   code: res.statusCode,
                   msg: "Já existe um usuário com essas credênciais",
                });
