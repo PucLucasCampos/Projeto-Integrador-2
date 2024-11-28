@@ -135,6 +135,56 @@
         </div>
       </div>
   </main>
+
+  <button class="botao-carteira btn-lg mx-2" data-bs-toggle="modal" data-bs-target="#adicionarCreditoModal">
+    Adicionar Créditos
+  </button>
+
+  <!-- Modal Adicionar Creditos -->
+  <div class="modal fade" id="adicionarCreditoModal" tabindex="-1" aria-labelledby="adicionarCreditoModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="adicionarCreditoModalLabel">Adicionar Créditos</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addFounds" action="">
+            <div class="mb-3">
+              <label for="valorCredito" class="form-label">Valor</label>
+              <input type="number" class="form-control" id="valorCredito" placeholder="Insira o valor" min="0"
+                value="0">
+            </div>
+            <div id="cartaoSimulado">
+              <div class="mb-3">
+                <label for="bancoNome" class="form-label">Nome do banco</label>
+                <input type="text" class="form-control" id="bancoNomeAddFounds" placeholder="Informe o nome do Banco">
+              </div>
+
+              <div class="mb-3">
+                <label for="agencia" class="form-label">Agencia</label>
+                <input type="number" class="form-control" id="agenciaAddFounds" placeholder="Informe a agencia">
+              </div>
+
+              <div class="mb-3">
+                <label for="contaNumero" class="form-label">Número da Conta de
+                  Destino</label>
+                <input type="number" class="form-control" id="contaNumeroAddFounds"
+                  placeholder="Informe o número da conta corrente">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-warning">Confirmar</button>
+          </form>
+
+          <!-- Mensagem erro (estilizar) -->
+          <div id="erroAdicionarCredito">
+            <span>APAGAR ESSE TEXTO APÓS FAZER O ESTILO</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 <script type="module" src="./scripts/event.js"></script>
 <script type="module" src="./scripts/account.js"></script>

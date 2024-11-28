@@ -180,6 +180,11 @@ const signUp = async (e) => {
         role: "user",
       });
 
+      localStorage.setItem(
+        "usuario",
+        JSON.stringify({ data, newAccount: true })
+      );
+
       window.location.href = "home.html";
     } else {
       window.alert("Requisição inválida - Parâmetros faltando.");
@@ -260,9 +265,12 @@ export function navbar(activeId) {
 
   menu.forEach((item) => {
     if (item.isModerador) {
-      isModerador() &&
+      if (isModerador()) {
         createMenuItem(item.title, item.file, activeId.includes(item.id));
-    } else createMenuItem(item.title, item.file, activeId.includes(item.id));
+      }
+    } else {
+      createMenuItem(item.title, item.file, activeId.includes(item.id));
+    }
   });
 }
 
