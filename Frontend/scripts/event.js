@@ -65,13 +65,27 @@ const createCardEvent = (event) => {
            Status: ${event.status}
             </div>
             ${
-              event.status == "approved"
+              event.status == "approved" &&
+              !isModerador() &&
+              new Date() < new Date(event.dataFim)
                 ? `<button class="event-button" data-event-id="${event.id}" data-bs-toggle="modal" data-bs-target="#betModal">Apostar</button>`
                 : ""
             }
                 ${
                   isModerador()
-                    ? `<button class="avaliar-button" data-event-id="${event.id}" data-bs-toggle="modal" data-bs-target="#evaluateModal">Avaliar</button>`
+                    ? `
+                    ${
+                      event.status === "awaiting approval"
+                        ? `<button class="avaliar-button" data-event-id="${event.id}" data-bs-toggle="modal" data-bs-target="#evaluateModal">Avaliar</button>`
+                        : ""
+                    }
+                   ${
+                     event.status != "closed" &&
+                     new Date() > new Date(event.dataFim)
+                       ? `<button class="avaliar-button" data-event-id="${event.id}" data-bs-toggle="modal" data-bs-target="#finishModal">Finalizar</button>`
+                       : ""
+                   }
+                    `
                     : ""
                 }
               </div>
@@ -241,41 +255,94 @@ export const evalueteNewEvent = async (eventId) => {
   const msgError = document.getElementById("errorAvaliateEvent");
 
   try {
-    if (document.getElementById("approveOption").checked) {
+    const avaliar = document.getElementById("approveOption").checked
+      ? "aprovado"
+      : "reprovado";
+
+    const data = await fetchData(
+      "/evaluateNewEvent",
+      getCookie("token"),
+      "POST",
+      {
+        id: eventId,
+        avaliar,
+      }
+    );
+
+    if (data.code == 200) {
+      fetchEvents();
+    }
+
+    msgError.innerHTML = data.msg;
+  } catch (error) {
+    msgError.innerHTML = "Não foi possivel Avaliar Evento";
+  } finally {
+    setTimeout(() => {
+      msgError.innerHTML = "";
+    }, 1000);
+  }
+};
+
+export const betEvent = async (eventId) => {
+  const msgError = document.getElementById("errorApostarEvent");
+
+  try {
+    const betAmount = document.getElementById("betAmount");
+
+    if (betAmount.value) {
+      const choice = document.getElementById("betOptionYes").checked
+        ? "sim"
+        : "nao";
+
       const data = await fetchData(
-        "/evaluateNewEvent",
+        "/betOnEvent",
         getCookie("token"),
         "POST",
+        {},
         {
-          id: eventId,
-          avaliar: "aprovado",
+          eventoId: eventId,
+          valorAposta: betAmount.value,
+          choice,
         }
       );
 
-      if (data.code == 200) {
-        fetchEvents();
+      if (data.code === 200) {
+        window.location.reload();
       }
 
       msgError.innerHTML = data.msg;
     } else {
-      const data = await fetchData(
-        "/evaluateNewEvent",
-        getCookie("token"),
-        "POST",
-        {
-          id: eventId,
-          avaliar: "reprovado",
-        }
-      );
-
-      if (data.code == 200) {
-        fetchEvents();
-      }
-
-      msgError.innerHTML = data.msg;
+      msgError.innerHTML = "Parâmetros inválidos";
     }
   } catch (error) {
-    msgError.innerHTML = "Não foi possivel Avaliar Evento";
+    msgError.innerHTML = "Não foi possível apostar no evento";
+  } finally {
+    setTimeout(() => {
+      msgError.innerHTML = "";
+    }, 1000);
+  }
+};
+
+export const finishEvent = async (eventId) => {
+  const msgError = document.getElementById("errorFinishEvent");
+
+  try {
+    const choice = document.getElementById("finishEventOptionYes").checked
+      ? "sim"
+      : "nao";
+
+    const data = await fetchData("/finishEvent", getCookie("token"), "POST", {
+      eventId: eventId,
+      occurred: choice,
+    });
+
+    if (data.code === 200) {
+      window.location.reload();
+    }
+
+    msgError.innerHTML = data.msg;
+  } catch (error) {
+    msgError.innerHTML = "Não foi possível apostar no evento";
   } finally {
     setTimeout(() => {
       msgError.innerHTML = "";

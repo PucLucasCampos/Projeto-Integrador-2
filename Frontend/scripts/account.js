@@ -187,7 +187,7 @@ const signUp = async (e) => {
 
       localStorage.setItem(
         "usuario",
-        JSON.stringify({ data, newAccount: true })
+        JSON.stringify({ data, newAccount: false })
       );
 
       window.location.href = "home.html";
@@ -295,7 +295,7 @@ export function navbar(activeId) {
 
   menu.forEach((item) => {
     if (item.isModerador) {
-      if (isModerador()) {
+      if (!isModerador()) {
         createMenuItem(
           item.title,
           item.file,
