@@ -111,7 +111,7 @@
                   <label for="categoriaEvent" class="text-d">Categoria</label>
                   <br>
                   <select class="formulario" aria-label="categoriaEvent" id="categoriaEvent">
-                    
+
                   </select>
                 </div>
 
@@ -235,7 +235,7 @@
           <form id="evaluateForm">
             <div class="mb-3">
               <label class="form-label">Escolha uma opção:</label>
-              <div class="form-check">
+              <div class="form-check" id="">
                 <input class="form-check-input" type="radio" name="evaluationOption" id="approveOption" value="Aprovar"
                   required>
                 <label class="form-check-label" for="approveOption">Aprovar</label>
@@ -248,6 +248,11 @@
             </div>
             <button type="submit" class="btn btn-warning">Confirmar</button>
           </form>
+
+          <!-- Mensagem erro (estilizar) -->
+          <div id="errorAvaliateEvent">
+            <span>APAGAR ESSE TEXTO APÓS FAZER O ESTILO</span>
+          </div>
         </div>
       </div>
     </div>
@@ -259,7 +264,7 @@
 
 <script type="module">
   import { isModerador, navbar } from "./scripts/account.js";
-  import { fetchSelectCategory } from "./scripts/event.js";
+  import { fetchSelectCategory, evalueteNewEvent } from "./scripts/event.js";
 
   document.addEventListener("DOMContentLoaded", () => {
     navbar([1]);
@@ -281,10 +286,28 @@
 
       parentNavTab.appendChild(tabBtn)
     }
-  
-      const selectCategoryContent = document.getElementById("categoriaEvent");
 
-      selectCategoryContent && fetchSelectCategory()
+    const selectCategoryContent = document.getElementById("categoriaEvent");
+
+    selectCategoryContent && fetchSelectCategory()
+
+    const evaluateModal = document.getElementById("evaluateModal");
+    evaluateModal.addEventListener("show.bs.modal", (event) => {
+      const button = event.relatedTarget;
+      const eventId = button.getAttribute("data-event-id");
+
+      const evaluateForm = document.getElementById("evaluateForm");
+
+      evaluateForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        await evalueteNewEvent(eventId);
+
+        const modalInstance = bootstrap.Modal.getInstance(evaluateModal);
+        modalInstance.hide();
+      });
+    });
+
   });
 
 

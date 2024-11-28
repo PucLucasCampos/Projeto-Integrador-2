@@ -53,7 +53,7 @@ const createCardEvent = (event) => {
   });
 
   newCard.innerHTML = `
-            <div class="event-card">
+            <div class="event-card" id='${event.id}'>
                 <div class="event-title">${event.titulo}</div>
                 <div class="event-text">Apostas Realizadas: ${event.qtdApostas
                   .toString()
@@ -66,12 +66,12 @@ const createCardEvent = (event) => {
             </div>
             ${
               event.status == "approved"
-                ? '<button class="event-button" data-bs-toggle="modal" data-bs-target="#betModal">Apostar</button>'
+                ? `<button class="event-button" data-event-id="${event.id}" data-bs-toggle="modal" data-bs-target="#betModal">Apostar</button>`
                 : ""
             }
                 ${
                   isModerador()
-                    ? `<button class="avaliar-button" data-bs-toggle="modal" data-bs-target="#evaluateModal">Avaliar</button>`
+                    ? `<button class="avaliar-button" data-event-id="${event.id}" data-bs-toggle="modal" data-bs-target="#evaluateModal">Avaliar</button>`
                     : ""
                 }
               </div>
@@ -175,8 +175,8 @@ const createEvent = async (e) => {
     const descricao = document.getElementById("descriptionEvent");
     const dataInicio = document.getElementById("dateStartEvent");
     const dataFim = document.getElementById("dateEndEvent");
-    const categoria = document.getElementById("categoriaEvent")
-    
+    const categoria = document.getElementById("categoriaEvent");
+
     if (!titulo.value.trim() || !descricao.value.trim()) {
       msgError.innerHTML = "Título e descrição são obrigatórios.";
       return;
@@ -203,13 +203,13 @@ const createEvent = async (e) => {
         categoriaId: categoria.value,
       }
     );
-    
-    if(data.code == 200) {
-      fetchEvents()
-      titulo.value = ""
-      descricao.value = ""
-      dataInicio.value = ""
-      dataFim.value = ""
+
+    if (data.code == 200) {
+      fetchEvents();
+      titulo.value = "";
+      descricao.value = "";
+      dataInicio.value = "";
+      dataFim.value = "";
     }
 
     msgError.innerHTML = data.msg;
@@ -235,6 +235,52 @@ export const fetchSelectCategory = async () => {
     newOption.textContent = item.nome;
     document.querySelector(`#categoriaEvent`).appendChild(newOption);
   });
+};
+
+export const evalueteNewEvent = async (eventId) => {
+  const msgError = document.getElementById("errorAvaliateEvent");
+
+  try {
+    if (document.getElementById("approveOption").checked) {
+      const data = await fetchData(
+        "/evaluateNewEvent",
+        getCookie("token"),
+        "POST",
+        {
+          id: eventId,
+          avaliar: "aprovado",
+        }
+      );
+
+      if (data.code == 200) {
+        fetchEvents();
+      }
+
+      msgError.innerHTML = data.msg;
+    } else {
+      const data = await fetchData(
+        "/evaluateNewEvent",
+        getCookie("token"),
+        "POST",
+        {
+          id: eventId,
+          avaliar: "reprovado",
+        }
+      );
+
+      if (data.code == 200) {
+        fetchEvents();
+      }
+
+      msgError.innerHTML = data.msg;
+    }
+  } catch (error) {
+    msgError.innerHTML = "Não foi possivel Avaliar Evento";
+  } finally {
+    setTimeout(() => {
+      msgError.innerHTML = "";
+    }, 1000);
+  }
 };
 
 document.addEventListener("DOMContentLoaded", () => {
