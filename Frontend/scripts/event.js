@@ -65,12 +65,12 @@ const createCardEvent = (event) => {
             </div>
             ${
               event.status == "approved"
-                ? '<button class="event-button">Apostar</button>'
+                ? '<button class="event-button" data-bs-toggle="modal" data-bs-target="#betModal">Apostar</button>'
                 : ""
             }
                 ${
                   isModerador()
-                    ? `<button class="event-button">Avaliar</button>`
+                    ? `<button class="avaliar-button" data-bs-toggle="modal" data-bs-target="#evaluateModal">Avaliar</button>`
                     : ""
                 }
               </div>

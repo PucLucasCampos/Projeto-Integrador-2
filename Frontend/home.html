@@ -185,6 +185,68 @@
       </div>
     </div>
   </div>
+
+            <!-- aqui é o modal para apostar :D-->
+            <div class="modal fade" id="betModal" tabindex="-1" aria-labelledby="betModalLabel" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="betModalLabel">Fazer Aposta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <form id="betForm">
+                      <div class="mb-3">
+                        <label for="betAmount" class="form-label">Valor da Aposta (R$)</label>
+                        <input type="number" class="form-control" id="betAmount" placeholder="Insira o valor" required>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Escolha uma opção:</label>
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="betOption" id="optionYes" value="Sim" required>
+                          <label class="form-check-label" for="optionYes">Sim</label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="betOption" id="optionNo" value="Não" required>
+                          <label class="form-check-label" for="optionNo">Não</label>
+                        </div>
+                      </div>
+                      <button type="submit" class="btn btn-warning">Confirmar</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!--fim do modal para apostar-->
+  
+            <!--aqui é o modal da avaliação -->
+            <div class="modal fade" id="evaluateModal" tabindex="-1" aria-labelledby="evaluateModalLabel" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="evaluateModalLabel">Avaliar Evento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <form id="evaluateForm">
+                      <div class="mb-3">
+                        <label class="form-label">Escolha uma opção:</label>
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="evaluationOption" id="approveOption" value="Aprovar" required>
+                          <label class="form-check-label" for="approveOption">Aprovar</label>
+                        </div>
+                        <div class="form-check">
+                          <input class="form-check-input" type="radio" name="evaluationOption" id="rejectOption" value="Reprovar" required>
+                          <label class="form-check-label" for="rejectOption">Reprovar</label>
+                        </div>
+                      </div>
+                      <button type="submit" class="btn btn-warning">Confirmar</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!--fim do modal de avaliação-->
 </body>
 <script type="module" src="./scripts/event.js"></script>
 <script type="module" src="./scripts/account.js"></script>
