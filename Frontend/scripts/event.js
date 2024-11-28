@@ -1,4 +1,5 @@
 import { isModerador } from "./account.js";
+import { formatDateForOracle } from "./utils/formatDateForOracle.js";
 import {
   fetchData,
   calculateTimeRemaining,
@@ -74,12 +75,7 @@ const createCardEvent = (event) => {
                     : ""
                 }
               </div>
-
-             
-     
     `;
-
-
 
   document.querySelector(`#${navTabActive}`).appendChild(newCard);
 };
@@ -118,13 +114,13 @@ const fetchEventsTab = {
 export const fetchEvents = async (status) => {
   try {
     const urlParams = new URLSearchParams(window.location.search);
-    const categoria = urlParams.get("category")
+    const categoria = urlParams.get("category");
 
     const params = {
       parametro: status ? status : fetchEventsTab[navTabActive],
-    }
+    };
 
-    Object.assign(params, categoria && {categoria})
+    Object.assign(params, categoria && { categoria });
 
     const data = await fetchData("/getEvents", "", "GET", params);
 
@@ -169,13 +165,54 @@ export const fetchCategory = async () => {
   }
 };
 
-const createEvent = (e) => {
+const createEvent = async (e) => {
   e.preventDefault();
 
   const msgError = document.getElementById("erroCreateEvent");
 
   try {
-    console.log("Criar Evento");
+    const titulo = document.getElementById("titleEvent");
+    const descricao = document.getElementById("descriptionEvent");
+    const dataInicio = document.getElementById("dateStartEvent");
+    const dataFim = document.getElementById("dateEndEvent");
+    const categoria = document.getElementById("categoriaEvent")
+    
+    if (!titulo.value.trim() || !descricao.value.trim()) {
+      msgError.innerHTML = "Título e descrição são obrigatórios.";
+      return;
+    }
+
+    if (
+      isNaN(Date.parse(dataInicio.value)) ||
+      isNaN(Date.parse(dataFim.value))
+    ) {
+      msgError.innerHTML = "Datas inválidas.";
+      return;
+    }
+
+    const data = await fetchData(
+      "/addNewEvent",
+      getCookie("token"),
+      "POST",
+      {},
+      {
+        titulo: titulo.value,
+        descricao: descricao.value,
+        dataInicio: dataInicio.value,
+        dataFim: dataFim.value,
+        categoriaId: categoria.value,
+      }
+    );
+    
+    if(data.code == 200) {
+      fetchEvents()
+      titulo.value = ""
+      descricao.value = ""
+      dataInicio.value = ""
+      dataFim.value = ""
+    }
+
+    msgError.innerHTML = data.msg;
   } catch (error) {
     msgError.innerHTML = "Não foi possivel Criar Evento";
   } finally {
@@ -183,6 +220,21 @@ const createEvent = (e) => {
       msgError.innerHTML = "";
     }, 1000);
   }
+};
+
+export const fetchSelectCategory = async () => {
+  const selectCategoryContent = document.getElementById("categoriaEvent");
+  selectCategoryContent.innerHTML = "";
+
+  const data = await fetchData("/getCategory", "", "GET");
+  const dataCategoria = data.categoria;
+
+  dataCategoria.map((item) => {
+    const newOption = document.createElement("option");
+    newOption.value = item.id;
+    newOption.textContent = item.nome;
+    document.querySelector(`#categoriaEvent`).appendChild(newOption);
+  });
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -215,10 +267,10 @@ document.addEventListener("DOMContentLoaded", () => {
   formCreateEvent && formCreateEvent.addEventListener("submit", createEvent);
 
   const urlParams = new URLSearchParams(window.location.search);
-  const categoria = urlParams.get("category")
+  const categoria = urlParams.get("category");
 
-  if(categoria) {
-    navTabActive = "card-category"
+  if (categoria) {
+    navTabActive = "card-category";
   }
 });
 

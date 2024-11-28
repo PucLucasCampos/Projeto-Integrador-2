@@ -120,23 +120,33 @@ export namespace EventHandler {
     }
   };
 
+  function isValidDate(date: string) {
+    const regex = /^\d{4}\-\d{2}\-\d{2}$/; // Verifica o formato yyyy-mm-dd
+    return regex.test(date);
+  }
+
   export const postAddEventRoute: RequestHandler = async (
     req: CustomRequest,
     res: Response
   ) => {
     let connection;
     try {
-      const { titulo, descricao, valorCota, dataInicio, dataFim, dataCriacao } =
+      const { titulo, descricao, valorCota, dataInicio, dataFim, categoriaId } =
         req.body;
+
+      if (!isValidDate(dataInicio) || !isValidDate(dataFim)) {
+        res.status(400).send({
+          code: res.statusCode,
+          msg: "Datas devem estar no formato dd/mm/yyyy",
+        });
+      }
 
       if (
         titulo != "" &&
         descricao != "" &&
-        dataInicio != "" &&
-        dataFim != "" &&
-        dataCriacao != "" &&
+        categoriaId &&
         req.body &&
-        req.account
+        req.account 
       ) {
         connection = await OracleDB.getConnection(dbConfig);
 
@@ -154,7 +164,8 @@ export namespace EventHandler {
                         DATAFIM,
                         DATACRIACAO,
                         STATUS,
-                        ACCOUNTSID
+                        ACCOUNTSID,
+                        FK_ID_CATEGORY
                     ) VALUES (
                         SEQ_EVENTS.NEXTVAL,
                         :titulo,
@@ -162,9 +173,10 @@ export namespace EventHandler {
                         :valorCota,
                         TO_DATE(:dataInicio, 'YYYY-MM-DD'),
                         TO_DATE(:dataFim, 'YYYY-MM-DD'),
-                        TO_DATE(:dataCriacao, 'YYYY-MM-DD'),
+                        CURRENT_DATE,
                         'awaiting approval',
-                        :accountId
+                        :accountId,
+                        :categoriaId
                     )
                 `;
 
@@ -176,8 +188,8 @@ export namespace EventHandler {
             cota,
             dataInicio,
             dataFim,
-            dataCriacao,
             account.id,
+            categoriaId
           ],
           { autoCommit: true }
         );
