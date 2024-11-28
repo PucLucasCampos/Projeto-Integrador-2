@@ -4,11 +4,15 @@ import { AccountsHandler } from "./accounts/accounts";
 import { EventHandler } from "./events/events";
 import { WalletHandler } from "./wallet/wallet";
 import dotenv from "dotenv";
+import cors from "cors";
 dotenv.config();
 
 const port = 3000;
 const server = express();
 const routes = Router();
+server.use(cors({
+  origin: "*",
+}))
 
 routes.use(express.json());
 routes.use(express.urlencoded({ extended: true }));
@@ -38,6 +42,7 @@ routes.get("/getAccount", AccountsHandler.verifyToken, AccountsHandler.getAccoun
 routes.post("/addNewEvent", AccountsHandler.verifyToken, EventHandler.postAddEventRoute);
 
 routes.get("/getEvents", EventHandler.getAllEvents);
+routes.get("/getCategory", EventHandler.getCategory);
 
 routes.delete("/deleteEvent", AccountsHandler.verifyToken, EventHandler.deleteEvent);
 
@@ -63,6 +68,8 @@ routes.put(
     AccountsHandler.verifyToken,
     WalletHandler.withdrawFundsHandler
 );
+
+routes.get("/historyWallet", AccountsHandler.verifyToken, WalletHandler.hitoricoWalletHandler);
 
 routes.post(
   "/betOnEvent",

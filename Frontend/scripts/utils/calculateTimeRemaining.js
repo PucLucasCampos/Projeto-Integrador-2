@@ -1,3 +1,10 @@
+/**
+ * Calcular tempo faltante para o evento encerrar
+ * @param {*} eventEndDate data que o evento irá finalizar (dataFim)
+ * @returns tempo faltante ou mensagem "O evento já encerrou."
+ * 
+ * @example const timeRemaining = calculateTimeRemaining("17/12/2024");
+ */
 export function calculateTimeRemaining(eventEndDate) {
   const dataFim = new Date(eventEndDate);
   const dataAtual = new Date();

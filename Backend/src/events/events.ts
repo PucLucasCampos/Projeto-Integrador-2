@@ -2,42 +2,44 @@ import e, { Request, RequestHandler, Response } from "express";
 import OracleDB from "oracledb";
 import { dbConfig } from "../dbConfig";
 import { CustomRequest } from "../types";
-import { AccountsHandler } from "../accounts/accounts";
-import { resolve } from "path";
 import { sendEmail } from "../utils";
 
 export namespace EventHandler {
-   /**
-    * Tipo Event
-    */
-   export type Event = {
-      id: number;
-      titulo: string;
-      descricao: string;
-      valorCota: number;
-      dataInicio: Date;
-      dataFim: Date;
-      data: Date;
-      status: string;
-   };
+  /**
+   * Tipo Event
+   */
+  export type Event = {
+    id: number;
+    titulo: string;
+    descricao: string;
+    valorCota: number;
+    dataInicio: Date;
+    dataFim: Date;
+    data: Date;
+    status: string;
+  };
 
-   type Apostarores = {
-      id: number
-      valor: number
-      accountId: number
-      choice: number
-   }
+  type Apostarores = {
+    id: number;
+    valor: number;
+    accountId: number;
+    choice: number;
+  };
 
-   export const getAllEvents = async (req: Request, res: Response): Promise<void> => {
-      let connection;
+  export const getAllEvents: RequestHandler = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    let connection;
 
-      try {
-         connection = await OracleDB.getConnection(dbConfig);
+    try {
+      connection = await OracleDB.getConnection(dbConfig);
 
-         const eParam = req.get("parametro");
+      const eParam = req.get("parametro");
+      const eCategory = req.get("categoria");
 
-         const sql: string = `
-         SELECT 
+      let sql = `
+        SELECT 
             E.ID AS "id",
             E.TITULO AS "titulo",
             E.DESCRICAO AS "descricao",
@@ -48,75 +50,100 @@ export namespace EventHandler {
             A.ID AS "accountId",
             A.NAME AS "name",
             A.EMAIL AS "email",
-            B.ID AS "betId",
+            COUNT(B.ID) AS "qtdApostas",
             COALESCE(SUM(B.VALOR), 0) AS "valorApostado"
-         FROM EVENTS E
+        FROM EVENTS E
             JOIN ACCOUNTS A ON A.ID = E.ACCOUNTSID
-            LEFT JOIN BETS B ON B.ID = E.ID
-         WHERE 
-            E.STATUS = :param
-         GROUP BY 
-            E.ID, E.TITULO, E.DESCRICAO, E.VALORCOTA, E.DATAINICIO, E.DATAFIM, E.STATUS,
-            A.ID, A.NAME, A.EMAIL, B.ID
-         `;
+            LEFT JOIN BETS B ON B.EVENTOID = E.ID
+      `;
 
-         if (
-            eParam == "awaiting approval" ||
-            eParam == "already occurred" ||
-            eParam == "deleted" ||
-            eParam == "approved"
-         ) {
-            const result: Event[] | unknown = (await connection.execute(sql, [eParam]))
-               .rows;
-            res.status(200).send({
-               code: res.statusCode,
-               msg: "Resultado da busca Eventos",
-               events: result,
-            });
-         } else {
-            res.status(400).send({
-               code: res.statusCode,
-               msg: "Parametro não econtrado",
-            });
-            return;
-         }
-      } catch (err) {
-         console.log(err);
-      } finally {
-         if (connection) {
-            try {
-               await connection.close();
-            } catch (err) {
-               console.log(err);
-            }
-         }
+      const conditions = [];
+      const params: Record<string, string> = {};
+
+      if (eParam) {
+        if (eParam === "ending") {
+          conditions.push("E.DATAFIM >= CURRENT_DATE");
+        } else if (eParam === "popular") {
+        } else {
+          conditions.push("E.STATUS = :param");
+          params.param = eParam;
+        }
       }
-   };
 
-   export const postAddEventRoute: RequestHandler = async (
-      req: CustomRequest,
-      res: Response
-   ) => {
-      let connection;
-      try {
-         const { titulo, descricao, valorCota, dataInicio, dataFim, dataCriacao } =
-            req.body;
+      if (eCategory) {
+        conditions.push("E.FK_ID_CATEGORY = :categoria");
+        params.categoria = eCategory;
+      }
 
-         if (
-            titulo != "" &&
-            descricao != "" &&
-            dataInicio != "" &&
-            dataFim != "" &&
-            dataCriacao != "" &&
-            req.body &&
-            req.account
-         ) {
-            connection = await OracleDB.getConnection(dbConfig);
+      if (conditions.length > 0) {
+        sql += `WHERE ${conditions.join(" AND ")} `;
+      }
 
-            let cota = valorCota ? valorCota : 0;
-            const account = req.account;
+      sql += `
+  GROUP BY 
+      E.ID, E.TITULO, E.DESCRICAO, E.VALORCOTA, E.DATAINICIO, E.DATAFIM, E.STATUS,
+      A.ID, A.NAME, A.EMAIL
+`;
 
-            const sql: string = `
+      if (eParam === "popular") {
+        sql += `HAVING COUNT(B.ID) > 0 `;
+      }
+
+      sql += `
+  ORDER BY 
+      COUNT(B.ID) DESC, 
+      E.DATAFIM DESC
+`;
+
+      const result = (await connection.execute(sql, params)).rows;
+
+      res.status(200).send({
+        code: res.statusCode,
+        search: eParam,
+        msg: "Resultado da busca Eventos",
+        events: result,
+      });
+    } catch (err) {
+      console.log(err);
+      res.status(500).send({
+        code: 500,
+        msg: "Erro interno do servidor",
+      });
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.log("Erro ao fechar a conexão", err);
+        }
+      }
+    }
+  };
+
+  export const postAddEventRoute: RequestHandler = async (
+    req: CustomRequest,
+    res: Response
+  ) => {
+    let connection;
+    try {
+      const { titulo, descricao, valorCota, dataInicio, dataFim, dataCriacao } =
+        req.body;
+
+      if (
+        titulo != "" &&
+        descricao != "" &&
+        dataInicio != "" &&
+        dataFim != "" &&
+        dataCriacao != "" &&
+        req.body &&
+        req.account
+      ) {
+        connection = await OracleDB.getConnection(dbConfig);
+
+        let cota = valorCota ? valorCota : 0;
+        const account = req.account;
+
+        const sql: string = `
                     INSERT INTO EVENTS
                     (
                         ID,
@@ -141,230 +168,248 @@ export namespace EventHandler {
                     )
                 `;
 
-            await connection.execute(
-               sql,
-               [titulo, descricao, cota, dataInicio, dataFim, dataCriacao, account.id],
-               { autoCommit: true }
-            );
+        await connection.execute(
+          sql,
+          [
+            titulo,
+            descricao,
+            cota,
+            dataInicio,
+            dataFim,
+            dataCriacao,
+            account.id,
+          ],
+          { autoCommit: true }
+        );
 
-            res.status(200).send({
-               code: res.statusCode,
-               msg: "Evento criado com sucesso",
-            });
-         } else {
-            res.status(400).send({
-               code: res.statusCode,
-               msg: "Requisição inválida - Parâmetros faltando.",
-            });
-         }
-      } catch (err) {
-         console.error(err);
-      } finally {
-         if (connection) {
-            try {
-               await connection.close();
-            } catch (err) {
-               console.error(err);
-            }
-         }
+        res.status(200).send({
+          code: res.statusCode,
+          msg: "Evento criado com sucesso",
+        });
+      } else {
+        res.status(400).send({
+          code: res.statusCode,
+          msg: "Requisição inválida - Parâmetros faltando.",
+        });
       }
-   };
+    } catch (err) {
+      console.error(err);
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  };
 
-   export const deleteEvent = async (
-      req: CustomRequest,
-      res: Response
-   ): Promise<void> => {
-      let connection;
+  export const deleteEvent: RequestHandler = async (
+    req: CustomRequest,
+    res: Response
+  ): Promise<void> => {
+    let connection;
 
-      try {
-         connection = await OracleDB.getConnection(dbConfig);
+    try {
+      connection = await OracleDB.getConnection(dbConfig);
 
-         const eId = req.get("id");
+      const eId = req.get("id");
 
-         const event = await checkEvent(eId);
+      const event = await checkEvent(eId);
 
-         const updateSql = `
+      const updateSql = `
             UPDATE EVENTS
             SET status = 'deleted'
             WHERE ID = :eId
          `;
 
-         if (eId && req.account) {
-            if (req.account.role == "moderador") {
-               if (event && event.length > 0) {
-                  await connection.execute(updateSql, [eId], {
-                     autoCommit: true,
-                  });
-                  res.status(200).send({
-                     code: res.statusCode,
-                     msg: "Evento deletado com sucesso",
-                  });
-               } else {
-                  res.status(400).send({
-                     code: res.statusCode,
-                     msg: "Evento não existe",
-                  });
-               }
-            } else {
-               res.status(400).send({
-                  code: res.statusCode,
-                  msg: "Acesso negado, você não é moderador",
-               });
-            }
-         }
-      } catch (err) {
-         console.error(err);
-      } finally {
-         if (connection) {
-            try {
-               await connection.close();
-            } catch (err) {
-               console.error(err);
-            }
-         }
+      if (eId && req.account) {
+        if (req.account.role == "moderador") {
+          if (event && event.length > 0) {
+            await connection.execute(updateSql, [eId], {
+              autoCommit: true,
+            });
+            res.status(200).send({
+              code: res.statusCode,
+              msg: "Evento deletado com sucesso",
+            });
+          } else {
+            res.status(400).send({
+              code: res.statusCode,
+              msg: "Evento não existe",
+            });
+          }
+        } else {
+          res.status(400).send({
+            code: res.statusCode,
+            msg: "Acesso negado, você não é moderador",
+          });
+        }
       }
-   };
+    } catch (err) {
+      console.error(err);
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  };
 
-   export const evaluateNewEvent = async (
-      req: CustomRequest,
-      res: Response
-   ): Promise<void> => {
-      let connection;
+  export const evaluateNewEvent: RequestHandler = async (
+    req: CustomRequest,
+    res: Response
+  ): Promise<void> => {
+    let connection;
 
-      try {
-         connection = await OracleDB.getConnection(dbConfig);
+    try {
+      connection = await OracleDB.getConnection(dbConfig);
 
-         const eAvaliar = req.get("avaliar");
-         const eId = req.get("id");
+      const eAvaliar = req.get("avaliar");
+      const eId = req.get("id");
 
-         const event = await checkEvent(eId);
+      const event = await checkEvent(eId);
 
-         const updateSql = `
+      const updateSql = `
          UPDATE EVENTS 
-         SET STATUS = 'approved' 
+         SET STATUS = :status
          WHERE ID = :eId
          `;
 
-         if (req.account && req.account.role == "moderador") {
-            if (event && event.length > 0) {
-               if (eAvaliar == "aprovado") {
-                  await connection.execute(updateSql, [eId], {
-                     autoCommit: true,
-                  });
-                  res.status(200).send({
-                     code: res.statusCode,
-                     msg: "Evento Aprovado com Sucesso!",
-                  });
-               } else if (eAvaliar == "reprovado") {
-                  const email: boolean = await sendEmail(
-                     req.account.email,
-                     "Aviso de Reprovação de Evento",
-                     `Prezado(a) Usuario(a), \nesperamos que esta mensagem o(a) encontre bem; \ninformamos que seu evento, intitulado ${event[0].titulo}, foi reprovado em nosso sistema de avaliação, possivelmente por não conformidades com os critérios estabelecidos para aprovação; \na reprovação, no entanto, não impede que você o reenvie após ajustes, e recomendamos revisar as diretrizes de nossos eventos para garantir alinhamento; \nagradecemos sua compreensão e esperamos continuar colaborando com você. \nAtenciosamente, Equipe de Avaliação de Eventos`
-                  );
-
-                  let msgEmail: string;
-                  if (email) {
-                     msgEmail = "E-mail de Reprovação enviado com sucesso!";
-                  } else {
-                     msgEmail = "Falha ao enviar e-mail de Reprovação!";
-                  }
-                  res.status(400).send({
-                     code: res.statusCode,
-                     msg: "Evento Reprovado!",
-                     msgEmail: msgEmail,
-                  });
-               }
-            } else {
-               res.status(400).send({
-                  code: res.statusCode,
-                  msg: "Evento não existe",
-               });
-            }
-         } else {
-            res.status(400).send({
-               code: res.statusCode,
-               msg: "Acesso negado, você não é moderador",
+      if (req.account && req.account.role == "moderador") {
+        if (event && event.length > 0) {
+          if (eAvaliar == "aprovado") {
+            await connection.execute(updateSql, ["approved", eId], {
+              autoCommit: true,
             });
-         }
-      } catch (err) {
-         console.error(err);
-      } finally {
-         if (connection) {
-            try {
-               await connection.close();
-            } catch (err) {
-               console.error(err);
+            res.status(200).send({
+              code: res.statusCode,
+              msg: "Evento Aprovado com Sucesso!",
+            });
+          } else if (eAvaliar == "reprovado") {
+            await connection.execute(updateSql, ["closed", eId], {
+              autoCommit: true,
+            });
+
+            const email: boolean = await sendEmail(
+              req.account.email,
+              "Aviso de Reprovação de Evento",
+              `Prezado(a) Usuario(a), \nesperamos que esta mensagem o(a) encontre bem; \ninformamos que seu evento, intitulado ${event[0].titulo}, foi reprovado em nosso sistema de avaliação, possivelmente por não conformidades com os critérios estabelecidos para aprovação; \na reprovação, no entanto, não impede que você o reenvie após ajustes, e recomendamos revisar as diretrizes de nossos eventos para garantir alinhamento; \nagradecemos sua compreensão e esperamos continuar colaborando com você. \nAtenciosamente, Equipe de Avaliação de Eventos`
+            );
+
+            let msgEmail: string;
+            if (email) {
+              msgEmail = "E-mail de Reprovação enviado com sucesso!";
+            } else {
+              msgEmail = "Falha ao enviar e-mail de Reprovação!";
             }
-         }
-      }
-   };
-
-   function betDistribution (betValue: number, qtdBettors: number, totalBetValue: number): number {
-      return totalBetValue * (betValue/qtdBettors)
-   }
-
-   async function updateWallet (valueReceive: number, accountId: number): Promise<boolean> {
-      let connection;
-
-      try {
-         connection = await OracleDB.getConnection(dbConfig)
-
-         const result = (await connection.execute(
-            `UPDATE WALLET SET SALDO = SALDO + :valorReceber WHERE USERID = :accountId`,
-            [valueReceive, accountId],
-            { autoCommit: true }
-          )).rowsAffected;
-
-          if(result && result > 0) {
-            return true
+            res.status(200).send({
+              code: res.statusCode,
+              msg: "Evento Reprovado!",
+              msgEmail: msgEmail,
+            });
           }
-
-
-      } catch (err) {
-         console.error(err)
-      } finally {
-         if(connection) {
-            try {
-               await connection.close()
-            } catch (err) {
-               console.error(err)
-            }
-         }
+        } else {
+          res.status(400).send({
+            code: res.statusCode,
+            msg: "Evento não existe",
+          });
+        }
+      } else {
+        res.status(400).send({
+          code: res.statusCode,
+          msg: "Acesso negado, você não é moderador",
+        });
       }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  };
 
-      return false
+  function betDistribution(
+    betValue: number,
+    sumTotalWin: number,
+    sumTotalBet: number
+  ): number {
+    return (betValue / sumTotalWin) * sumTotalBet;
+  }
 
-   }
+  async function updateWallet(
+    valueReceive: number,
+    accountId: number
+  ): Promise<boolean> {
+    let connection;
 
-   export const finishEvent = async (
-      req: CustomRequest,
-      res: Response
-   ): Promise<void> => {
-      let connection;
+    try {
+      connection = await OracleDB.getConnection(dbConfig);
 
-      try {
-         connection = await OracleDB.getConnection(dbConfig);
+      const result = (
+        await connection.execute(
+          `UPDATE WALLET SET SALDO = SALDO + :valorReceber WHERE USERID = :accountId`,
+          [valueReceive, accountId],
+          { autoCommit: true }
+        )
+      ).rowsAffected;
 
-         const eId = req.get("eventId");
-         const isOccurred = req.get("occurred")
+      if (result && result > 0) {
+        return true;
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
 
-         const event = await checkEvent(eId);
+    return false;
+  }
 
-         const sql: string = `
+  export const finishEvent: RequestHandler = async (
+    req: CustomRequest,
+    res: Response
+  ): Promise<void> => {
+    let connection;
+
+    try {
+      connection = await OracleDB.getConnection(dbConfig);
+
+      const eId = req.get("eventId");
+      const isOccurred = req.get("occurred");
+
+      const event = await checkEvent(eId);
+
+      const sql: string = `
          UPDATE EVENTS 
          SET STATUS = 'closed' 
          WHERE ID = :eId
          `;
 
-         if (req.account && req.account.role == "moderador" && isOccurred) {
-            if (event && event.length > 0) {
-               const data = new Date()
-               let dataFim = event[0].dataFim;
+      if (req.account && req.account.role == "moderador" && isOccurred) {
+        if (event && event.length > 0) {
+          const data = new Date();
+          let dataFim = event[0].dataFim;
 
-               if (data > dataFim) {
-                  await connection.execute(sql, [eId], { autoCommit: true });
+          if (data > dataFim) {
+            await connection.execute(sql, [eId], { autoCommit: true });
 
-                  const sqlBettors: string = `
+            const sqlBettors: string = `
                   SELECT 
                      ID AS "id",
                      valor AS "valor",
@@ -373,85 +418,84 @@ export namespace EventHandler {
                   FROM BETS WHERE eventoID = :eventId
                   `;
 
-                  const bettors = ((await connection.execute(sqlBettors, [eId])).rows) as Apostarores[];
+            const bettors = (await connection.execute(sqlBettors, [eId]))
+              .rows as Apostarores[];
+            const choice = isOccurred.toLowerCase() == "sim" ? 1 : 0;
 
-                  const notChoice: Apostarores[] = bettors.filter((bet) => bet.choice == 0)
+            const ganhadores: Apostarores[] = bettors.filter(
+              (bet) => bet.choice == choice
+            );
 
-                  const sumTotal = notChoice.reduce((previousValue: number, currentValue: Apostarores) => {
-                        return previousValue += currentValue.valor
-                  }, 0)
+            const sumTotalWin = ganhadores.reduce(
+              (previousValue: number, currentValue: Apostarores) => {
+                return (previousValue += currentValue.valor);
+              },
+              0
+            );
 
-                  const qtdBettors = bettors.length
+            const sumTotalBet = bettors.reduce(
+              (previousValue: number, currentValue: Apostarores) => {
+                return (previousValue += currentValue.valor);
+              },
+              0
+            );
 
-                  bettors.forEach( async (Bettors) => {
-                     const {valor, choice, accountId} = Bettors
-                     const valueReceive: number = betDistribution(valor, qtdBettors, sumTotal)
-                     const isOccurredBool: number = isOccurred.toLowerCase() == "sim" ? 1 : 0
+            bettors.forEach(async (Bettors) => {
+              const { valor, choice, accountId } = Bettors;
+              const valueReceive: number = betDistribution(
+                valor,
+                sumTotalWin,
+                sumTotalBet
+              );
+              const isOccurredBool: number =
+                isOccurred.toLowerCase() == "sim" ? 1 : 0;
 
-
-                     if(isOccurredBool == choice) {
-                        await updateWallet(valueReceive, accountId)
-
-                        // console.log("Usuario", {
-                        //    valorApostado: valor,
-                        //    valorReceber: betDistribution(valor, qtdBettors, sumTotal),
-                        //    accountId,
-                        //    choice: "Usuario apostado" ,
-                        //    msg: messageWallet ? "Alterei a wallet" : "Erro Wallet"
-                        // })
-                     } 
-                     // else {
-                     //    console.log("Usuario", {
-                     //       valorApostado: valor,
-                     //       valorReceber: 0,
-                     //       accountId,
-                     //       choice: "Usuario não apostado",
-                     //       msg: "Sem alteração na wallet"
-                     //    })
-                     // }
-                  })
-                  res.status(200).send({
-                     code: res.statusCode,
-                     msg: "Evento Finalizado",
-                  });
-               } else {
-                  res.status(400).send({
-                     code: res.statusCode,
-                     msg: `Não foi possivel encerrar o evento, encerrarmento somente depois da data ${dataFim.toLocaleDateString()}`, 
-                  });
-               }
-            } else {
-               res.status(400).send({
-                  code: res.statusCode,
-                  msg: "Evento não existe",
-               });
-            }
-         } else {
-            res.status(400).send({
-               code: res.statusCode,
-               msg: "Acesso negado, você não é moderador",
+              if (isOccurredBool == choice) {
+                await updateWallet(valueReceive, accountId);
+              }
             });
-         }
-      } catch (err) {
-         console.error(err);
-      } finally {
-         if (connection) {
-            try {
-               await connection.close();
-            } catch (err) {
-               console.error(err);
-            }
-         }
+            res.status(200).send({
+              code: res.statusCode,
+              msg: "Evento Finalizado",
+            });
+          } else {
+            res.status(400).send({
+              code: res.statusCode,
+              msg: `Não foi possivel encerrar o evento, encerrarmento somente depois da data ${dataFim.toLocaleDateString()}`,
+            });
+          }
+        } else {
+          res.status(400).send({
+            code: res.statusCode,
+            msg: "Evento não existe",
+          });
+        }
+      } else {
+        res.status(400).send({
+          code: res.statusCode,
+          msg: "Acesso negado, você não é moderador",
+        });
       }
-   };
+    } catch (err) {
+      console.error(err);
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    }
+  };
 
-   async function checkEvent(eId: string | undefined) {
-      let connection;
+  async function checkEvent(eId: string | undefined) {
+    let connection;
 
-      try {
-         connection = await OracleDB.getConnection(dbConfig);
+    try {
+      connection = await OracleDB.getConnection(dbConfig);
 
-         const sql: string = `
+      const sql: string = `
          SELECT 
             ID as "id",
             TITULO as "titulo",
@@ -465,79 +509,133 @@ export namespace EventHandler {
          FROM EVENTS WHERE ID = :eId 
          `;
 
-         const result = (await connection.execute(sql, [eId])).rows as Event[];
+      const result = (await connection.execute(sql, [eId])).rows as Event[];
 
-         return result;
-      } catch (err) {
-         console.log(err);
-      } finally {
-         if (connection) {
-            try {
-               await connection.close();
-            } catch (err) {
-               console.log(err);
-            }
-         }
+      return result;
+    } catch (err) {
+      console.log(err);
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.log(err);
+        }
       }
-   }
+    }
+  }
 
-   export const searchEvent = async (req: Request, res: Response): Promise<void> => {
-      let connection;
-  
-      try {
-         connection = await OracleDB.getConnection(dbConfig);
-  
-         const searchParam = req.query.search as string; 
-  
-         if (!searchParam || searchParam.trim() === "") {
-            res.status(400).send({
-               code: 400,
-               msg: "O parâmetro de busca é obrigatório.",
-            });
-         }
-  
-         const sql: string = `
-            SELECT 
-               E.ID AS "id",
-               E.TITULO AS "titulo",
-               E.DESCRICAO AS "descricao",
-               E.VALORCOTA AS "valorCota",
-               E.DATAINICIO AS "dataInicio",
-               E.DATAFIM AS "dataFim",
-               E.STATUS AS "status"
-            FROM EVENTS E
+  export const searchEvent: RequestHandler = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    let connection;
+
+    try {
+      connection = await OracleDB.getConnection(dbConfig);
+
+      const searchParam = req.query.search;
+
+      const sql: string = `
+         SELECT 
+            E.ID AS "id",
+            E.TITULO AS "titulo",
+            E.DESCRICAO AS "descricao",
+            E.VALORCOTA AS "valorCota",
+            E.DATAINICIO AS "dataInicio",
+            E.DATAFIM AS "dataFim",
+            E.STATUS AS "status",
+            A.ID AS "accountId",
+            A.NAME AS "name",
+            A.EMAIL AS "email",
+            COUNT(B.ID) AS "qtdApostas",
+            COALESCE(SUM(B.VALOR), 0) AS "valorApostado"
+         FROM EVENTS E
+            JOIN ACCOUNTS A ON A.ID = E.ACCOUNTSID
+            LEFT JOIN BETS B ON B.EVENTOID = E.ID
             WHERE 
                LOWER(E.TITULO) LIKE '%' || :search || '%' 
                OR LOWER(E.DESCRICAO) LIKE '%' || :search || '%'
+               GROUP BY 
+            E.ID, E.TITULO, E.DESCRICAO, E.VALORCOTA, E.DATAINICIO, E.DATAFIM, E.STATUS,
+            A.ID, A.NAME, A.EMAIL
              `;
-  
-         const result = await connection.execute(sql, {
-            search: searchParam.toLowerCase(),
-         });
-  
-         if (result.rows && result.rows.length > 0) {
-            res.status(200).send({
-               code: 200,
-               msg: "Eventos encontrados",
-               events: result.rows,
-            });
-         } else {
-            res.status(404).send({
-               code: 404,
-               msg: "Nenhum evento encontrado para o termo buscado.",
-            });
-          
+
+      if (searchParam && searchParam.toString().trim() != "") {
+        const search = searchParam.toString().toLowerCase();
+
+        const result = await connection.execute(sql, { search });
+
+        if (result.rows && result.rows.length > 0) {
+          res.status(200).send({
+            code: 200,
+            msg: "Eventos encontrados",
+            events: result.rows,
+          });
+        } else {
+          res.status(400).send({
+            code: 400,
+            msg: "Nenhum evento encontrado para o termo buscado.",
+          });
+        }
+      } else {
+        res.status(400).send({
+          code: 400,
+          msg: "O parâmetro de busca é obrigatório.",
+        });
       }
-   } catch (err) {
+    } catch (err) {
       console.log(err);
-      }finally {
-         if (connection) {
-            try {
-               await connection.close();
-            } catch (err) {
-               console.log(err);
-            }
-         }
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.log(err);
+        }
       }
-   }
+    }
+  };
+
+  export const getCategory = async (
+    req: Request,
+    res: Response
+  ): Promise<void> => {
+    let connection;
+
+    try {
+      connection = await OracleDB.getConnection(dbConfig);
+
+      let sql = `
+      SELECT C.ID_CATEGORY AS "id", C.NOME AS "nome", COUNT(E.ID) AS "qtdEventos"
+      FROM CATEGORY C
+          JOIN EVENTS E ON E.FK_ID_CATEGORY = C.ID_CATEGORY
+      GROUP BY
+          C.ID_CATEGORY,
+          C.NOME
+      `;
+
+      const result = (await connection.execute(sql)).rows;
+
+      res.status(200).send({
+        code: res.statusCode,
+        msg: "Resultado da busca Categorias",
+        categoria: result,
+      });
+    } catch (err) {
+      console.log(err);
+      res.status(500).send({
+        code: 500,
+        msg: "Erro interno do servidor",
+      });
+    } finally {
+      if (connection) {
+        try {
+          await connection.close();
+        } catch (err) {
+          console.log("Erro ao fechar a conexão", err);
+        }
+      }
+    }
+  };
 }

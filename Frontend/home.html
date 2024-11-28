@@ -13,16 +13,14 @@
 </head>
 
 <body>
-  <nav class="navbar navbar-expand-lg navbar-light sticky-top">
+  <!-- Header -->
+  <nav class="navbar navbar-expand-lg navbar-light sticky-top ">
     <div class="container-fluid">
-      <img class="minilogo" src="assets/tkzin.png" alt="Logo">
+      <img class="minilogo" src="assets/tkzin.png">
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav">
           <li class="nav-item">
-            <a class="text-g ativo menu-g" aria-current="page" href="home.html">HOME</a>
-          </li>
-          <li class="nav-item">
-            <a class="text-g menu-g" href="apostas.html">EVENTOS</a>
+            <a class="text-g active menu-g" aria-current="page" href="home.html">HOME</a>
           </li>
           <li class="nav-item">
             <a class="text-g menu-g" href="carteira.html">CARTEIRA</a>
@@ -33,12 +31,13 @@
         </ul>
       </div>
       <div class="user-saldo">
-        <div class="saldo" id="saldo-user">R$ SALDO DO USUARIO</div>
+        <div class="saldo balance" id="saldo-user">R$ SALDO DO USUARIO</div>
         <div class="text-w" id="nome-user">NOME DO USUARIO</div>
       </div>
     </div>
   </nav>
 
+  <!-- Barra Pesquisar -->
   <main class="container main-content">
     <div class="betting-area">
       <div class="search-container">
@@ -49,6 +48,8 @@
       </div>
 
       <div class="container">
+
+        <!-- NavTab -->
         <nav>
           <div class="nav nav-eventos-botao nav-eventos nav-tabs mb-3" id="nav-tab" role="tablist">
             <button class="botao nav-link active" id="nav-ending-tab" data-bs-toggle="tab" data-bs-target="#nav-ending"
@@ -59,159 +60,47 @@
 
             <button class="botao nav-link" id="nav-category-tab" data-bs-toggle="tab" data-bs-target="#nav-category"
               type="button" role="tab" aria-controls="nav-category" aria-selected="false">Categorias</button>
-              
-            <button class="botao nav-link" id="nav-create-tab" data-bs-toggle="tab" data-bs-target="#nav-create" type="button"
-              role="tab" aria-controls="nav-create" aria-selected="false">Criar evento</button>
           </div>
         </nav>
 
         <div class="tab-content" id="nav-tabContent">
+          <!-- Tab Proximos a encerrar -->
           <div class="tab-pane fade show active p-3" id="nav-ending" role="tabpanel">
-            <div class="event-grid" id="card-apostado">
-              <div class="event-card">
+            <div class="event-grid" id="card-ending">
+              <!-- <div class="event-card">
                 <div class="event-title">NOME APOSTA</div>
                 <div class="event-text">QUANTAS APOSTAS REALIZADAS</div>
-                <button class="event-button" data-bs-toggle="modal" data-bs-target="#betModal">Apostar</button>
-                <button class="avaliar-button" data-bs-toggle="modal" data-bs-target="#evaluateModal">Avaliar</button>
-              </div>
-              <div class="event-card">
-                <div class="event-title">NOME APOSTA</div>
-                <div class="event-text">QUANTAS APOSTAS REALIZADAS</div>
-                <button class="event-button" data-bs-toggle="modal" data-bs-target="#betModal">Apostar</button>
-                <button class="avaliar-button" data-bs-toggle="modal" data-bs-target="#evaluateModal">Avaliar</button>
-              </div>
-              <div class="event-card">
-                <div class="event-title">NOME APOSTA</div>
-                <div class="event-text">QUANTAS APOSTAS REALIZADAS</div>
-                <button class="event-button" data-bs-toggle="modal" data-bs-target="#betModal">Apostar</button>
-                <button class="avaliar-button" data-bs-toggle="modal" data-bs-target="#evaluateModal">Avaliar</button>
-              </div>
-              <div class="event-card">
-                <div class="event-title">NOME APOSTA</div>
-                <div class="event-text">QUANTAS APOSTAS REALIZADAS</div>
-                <button class="event-button" data-bs-toggle="modal" data-bs-target="#betModal">Apostar</button>
-                <button class="avaliar-button" data-bs-toggle="modal" data-bs-target="#evaluateModal">Avaliar</button>
-              </div>
+                <button class="event-button">Apostar</button>
+              </div> -->
             </div>
           </div>
+
+          <!-- Tab Mais Apostados -->
           <div class="tab-pane fade p-3" id="nav-popular" role="tabpanel">
-            <div class="event-grid" id="card-apostado">
-              <div class="event-card">
+            <div class="event-grid" id="card-popular">
+              <!-- <div class="event-card">
                 <div class="event-title">NOME APOSTA</div>
                 <div class="event-text">QUANTAS APOSTAS REALIZADAS</div>
-                <button class="event-button" data-bs-toggle="modal" data-bs-target="#betModal">Apostar</button> 
-                <button class="avaliar-button" data-bs-toggle="modal" data-bs-target="#evaluateModal">Avaliar</button>
-              </div>
-              <div class="event-card">
-                <div class="event-title">NOME APOSTA</div>
-                <div class="event-text">QUANTAS APOSTAS REALIZADAS</div>
-                <button class="event-button" data-bs-toggle="modal" data-bs-target="#betModal">Apostar</button>
-                <button class="avaliar-button" data-bs-toggle="modal" data-bs-target="#evaluateModal">Avaliar</button>
-              </div>
-              <div class="event-card">
-                <div class="event-title">NOME APOSTA</div>
-                <div class="event-text">QUANTAS APOSTAS REALIZADAS</div>
-                <button class="event-button" data-bs-toggle="modal" data-bs-target="#betModal">Apostar</button>
-                <button class="avaliar-button" data-bs-toggle="modal" data-bs-target="#evaluateModal">Avaliar</button>
-              </div>
-              
+                <button class="event-button">Apostar</button>
+              </div> -->
             </div>
           </div>
+
+          <!-- Tab Categoria -->
           <div class="tab-pane fade p-3" id="nav-category" role="tabpanel">
-            <div class="category-cards">
-              <div class="category-card">
+            <div class="category-cards" id="card-category">
+              <!-- <div class="category-card">
                 <div class="category-icon">🏅</div>
                 <div class="text-b">Olimpíadas (NOME CATEGORIA)</div>
                 <div class="category-count">23 eventos (QUANTIDADE EVENTO DA CATEGORIA)</div>
-              </div>
-              <div class="category-card">
-                <div class="category-icon">🏅</div>
-                <div class="text-b">Futebol (NOME CATEGORIA)</div>
-                <div class="category-count">7 eventos (QUANTIDADE EVENTO DA CATEGORIA)</div>
-              </div>
-              <div class="category-card">
-                <div class="category-icon">🏅</div>
-                <div class="text-b">Desastre (NOME CATEGORIA)</div>
-                <div class="category-count">119 eventos (QUANTIDADE EVENTO DA CATEGORIA)</div>
-              </div>
-              <div class="category-card">
-                <div class="category-icon">🏅</div>
-                <div class="text-b">Prova do Sergio (NOME CATEGORIA)</div>
-                <div class="category-count">1 eventos (QUANTIDADE EVENTO DA CATEGORIA)</div>
-              </div>
-              <div class="category-card">
-                <div class="category-icon">🏅</div>
-                <div class="text-b">Fillipe atrasando PI (NOME CATEGORIA)</div>
-                <div class="category-count">9999 eventos (QUANTIDADE EVENTO DA CATEGORIA)</div>
-              </div>
+              </div> -->
             </div>
           </div>
 
-          <!-- aqui é o modal para apostar :D-->
-          <div class="modal fade" id="betModal" tabindex="-1" aria-labelledby="betModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="betModalLabel">Fazer Aposta</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                  <form id="betForm">
-                    <div class="mb-3">
-                      <label for="betAmount" class="form-label">Valor da Aposta (R$)</label>
-                      <input type="number" class="form-control" id="betAmount" placeholder="Insira o valor" required>
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label">Escolha uma opção:</label>
-                      <div class="form-check">
-                        <input class="form-check-input" type="radio" name="betOption" id="optionYes" value="Sim" required>
-                        <label class="form-check-label" for="optionYes">Sim</label>
-                      </div>
-                      <div class="form-check">
-                        <input class="form-check-input" type="radio" name="betOption" id="optionNo" value="Não" required>
-                        <label class="form-check-label" for="optionNo">Não</label>
-                      </div>
-                    </div>
-                    <button type="submit" class="btn btn-warning">Confirmar</button>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
-          <!--fim do modal para apostar-->
-
-          <!--aqui é o modal da avaliação -->
-          <div class="modal fade" id="evaluateModal" tabindex="-1" aria-labelledby="evaluateModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title" id="evaluateModalLabel">Avaliar Evento</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                  <form id="evaluateForm">
-                    <div class="mb-3">
-                      <label class="form-label">Escolha uma opção:</label>
-                      <div class="form-check">
-                        <input class="form-check-input" type="radio" name="evaluationOption" id="approveOption" value="Aprovar" required>
-                        <label class="form-check-label" for="approveOption">Aprovar</label>
-                      </div>
-                      <div class="form-check">
-                        <input class="form-check-input" type="radio" name="evaluationOption" id="rejectOption" value="Reprovar" required>
-                        <label class="form-check-label" for="rejectOption">Reprovar</label>
-                      </div>
-                    </div>
-                    <button type="submit" class="btn btn-warning">Confirmar</button>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
-          <!--fim do modal de avaliação-->
-
+          <!-- Tab Criar Evento -->
           <div class="tab-pane fade p-3" id="nav-create" role="tabpanel">
             <div class="formulario-aposta">
-              <form>
+              <form id="createEvent" onsubmit="createEvent">
                 <div class="mb-2">
                   <input type="text" class="formulario" id="titleEvent" placeholder="Título" required>
                 </div>
@@ -219,7 +108,8 @@
                   <textarea class="formulario" id="descriptionEvent" rows="3" placeholder="Descrição"></textarea>
                 </div>
                 <div class="mb-2">
-                  <input type="number" class="formulario" id="cotaEvent" placeholder="Valor da cota" required>
+                  <input type="number" class="formulario" id="cotaEvent" placeholder="Valor da cota" value="0" min="0"
+                    required>
                 </div>
                 <div class="mb-2 d-flex ">
                   <div class="me-5">
@@ -235,13 +125,43 @@
                 </div>
                 <button type="submit" class="form-button">Criar</button>
               </form>
+
+              <!-- Mensagem erro (estilizar) -->
+              <div id="erroCreateEvent">
+                <span>APAGAR ESSE TEXTO APÓS FAZER O ESTILO</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
   </main>
-  <script type="module" src="./scripts/index.js"></script>
 </body>
+<script type="module" src="./scripts/event.js"></script>
+<script type="module" src="./scripts/account.js"></script>
+
+<script type="module">
+  import { isModerador } from "./scripts/account.js";
+
+  if (isModerador()) {
+
+    const parent = document.getElementById("nav-tab");
+    const tabBtn = document.createElement("button");
+    tabBtn.classList.add("botao", "nav-link");
+    tabBtn.id = "nav-create-tab";
+    tabBtn.setAttribute("data-bs-toggle", "tab");
+    tabBtn.setAttribute("data-bs-target", "#nav-create");
+    tabBtn.setAttribute("type", "button");
+    tabBtn.setAttribute("role", "tab");
+    tabBtn.setAttribute("aria-controls", "nav-create");
+    tabBtn.setAttribute("aria-selected", "false");
+
+    tabBtn.innerHTML = "Criar evento";
+
+    parent.appendChild(tabBtn);
+
+  }
+</script>
+
+
 
 </html>
