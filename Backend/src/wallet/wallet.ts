@@ -28,7 +28,11 @@ export namespace WalletHandler {
    */
   async function addFundsWallet(
     valorAdd: number,
-    walletId: number
+    walletId: number,
+    accountId: number,
+    bancoNome: string,
+    agencia: string,
+    contaNumero: string
   ): Promise<boolean> {
     let connection;
 
@@ -41,16 +45,49 @@ export namespace WalletHandler {
         WHERE ID = :walletId
       `;
 
-      const result = (
+      const resultUpdateWallet = (
         await connection.execute(sql, [valorAdd, walletId], {
           autoCommit: true,
         })
       ).rowsAffected;
 
-      if (result && result > 0) {
-        await createHistoricoWallet(valorAdd, walletId, "deposito");
+      const historicoWalletId = await createHistoricoWallet(
+        Number(valorAdd),
+        walletId,
+        "deposito"
+      );
 
-        return true;
+      if (resultUpdateWallet && resultUpdateWallet > 0) {
+        if (historicoWalletId > 0) {
+          const bancoSql: string = `
+            insert into
+                bank_account (
+                    id,
+                    bancoNome,
+                    agencia,
+                    contaNumero,
+                    historicoWalletID,
+                    accountID
+                )
+            values (
+                    seq_bank_account.nextval,
+                    :bancoNome,
+                    :agencia,
+                    :contaNumero,
+                    :historicoWalletId,
+                    :accountId
+                )
+          `;
+          await connection.execute(
+            bancoSql,
+            [bancoNome, agencia, contaNumero, historicoWalletId, accountId],
+            {
+              autoCommit: true,
+            }
+          );
+
+          return true;
+        }
       }
     } catch (err) {
       console.error(err);
@@ -75,9 +112,19 @@ export namespace WalletHandler {
     res: Response
   ) => {
     const valorAdd = req.get("valorAdd");
+    const bancoNome = req.get("bancoNome");
+    const agencia = req.get("agencia");
+    const contaNumero = req.get("contaNumero");
 
-    if (valorAdd && req.account?.walletId) {
+    if (
+      valorAdd &&
+      req.account?.walletId &&
+      bancoNome &&
+      agencia &&
+      contaNumero
+    ) {
       const walletId = req.account.walletId;
+      const accountId = req.account.id;
 
       if (Number(valorAdd) <= 0) {
         res.status(400).send({
@@ -86,7 +133,14 @@ export namespace WalletHandler {
         });
       }
 
-      const success = await addFundsWallet(Number(valorAdd), walletId);
+      const success = await addFundsWallet(
+        Number(valorAdd),
+        walletId,
+        accountId,
+        bancoNome,
+        agencia,
+        contaNumero
+      );
 
       if (success) {
         res.status(200).send({
