@@ -130,11 +130,9 @@ export const fetchEvents = async (status) => {
     const urlParams = new URLSearchParams(window.location.search);
     const categoria = urlParams.get("category");
 
-    const params = {
-      parametro: status ? status : fetchEventsTab[navTabActive],
-    };
+    const params = {};
 
-    Object.assign(params, categoria && { categoria });
+    Object.assign(params, categoria && { categoria }, !categoria && {parametro: status ? status : !categoria && fetchEventsTab[navTabActive]});
 
     const data = await fetchData("/getEvents", "", "GET", params);
 

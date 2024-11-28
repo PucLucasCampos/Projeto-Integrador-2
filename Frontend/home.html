@@ -299,13 +299,16 @@
 <script type="module" src="./scripts/account.js"></script>
 
 <script type="module">
-  import { isModerador, navbar } from "./scripts/account.js";
+  import { isModerador, navbar, account } from "./scripts/account.js";
   import { fetchSelectCategory, evalueteNewEvent, betEvent, finishEvent } from "./scripts/event.js";
 
-  document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener("DOMContentLoaded", async () => {
+
+    await account();
+
     navbar([1]);
 
-    if (isModerador()) {
+    if (!isModerador()) {
       const parentNavTab = document.getElementById("nav-tab");
       const tabBtn = document.createElement("button");
       tabBtn.classList.add("botao", "nav-link");
@@ -320,11 +323,6 @@
       tabBtn.innerHTML = "Criar evento";
 
       parentNavTab.appendChild(tabBtn)
-    } else {
-
-      // <button class="botao-carteira btn-lg mx-2" data-bs-toggle="modal" data-bs-target="#adicionarCreditoModal">
-          // Adicionar Créditos
-        // </button>
 
       const btnAdicionarCredito = document.getElementById("btnAdicionarCredito")
       const btnAddCredito = document.createElement("button");
@@ -337,8 +335,7 @@
 
 
       btnAdicionarCredito.appendChild(btnAddCredito)
-
-    }
+    } 
 
     const selectCategoryContent = document.getElementById("categoriaEvent");
 
@@ -356,8 +353,10 @@
 
         await evalueteNewEvent(eventId);
 
-        const modalInstance = bootstrap.Modal.getInstance(evaluateModal);
-        modalInstance.hide();
+        setTimeout(() => {
+          const modalInstance = bootstrap.Modal.getInstance(evaluateModal);
+          modalInstance.hide();
+        }, 1000)
       });
     });
 
@@ -372,8 +371,10 @@
 
         await betEvent(eventId);
 
-        const modalInstance = bootstrap.Modal.getInstance(betModal);
-        modalInstance.hide();
+        setTimeout(() => {
+          const modalInstance = bootstrap.Modal.getInstance(betModal);
+          modalInstance.hide();
+        }, 1000)
       });
     });
 
@@ -388,8 +389,10 @@
 
         await finishEvent(eventId);
 
-        const modalInstance = bootstrap.Modal.getInstance(betModal);
-        modalInstance.hide();
+        setTimeout(() => {
+          const modalInstance = bootstrap.Modal.getInstance(betModal);
+          modalInstance.hide();
+        }, 1000)
       });
     });
 

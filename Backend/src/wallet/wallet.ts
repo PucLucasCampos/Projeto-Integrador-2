@@ -174,15 +174,25 @@ export namespace WalletHandler {
     try {
       connection = await OracleDB.getConnection(dbConfig);
 
-      if (valorSacar <= 100) {
-        valorSacar -= valorSacar * 0.04;
-      } else if (valorSacar <= 1000) {
-        valorSacar -= valorSacar * 0.03;
-      } else if (valorSacar <= 5000) {
-        valorSacar -= valorSacar * 0.02;
-      } else if (valorSacar <= 100000) {
-        valorSacar -= valorSacar * 0.01;
+      if (valorSacar > 101000) {
+        console.error("O valor máximo de saque diário é R$ 101.000,00.");
+        return false;
       }
+
+      let taxa = 0;
+      if (valorSacar <= 100) {
+        taxa = 0.04;
+      } else if (valorSacar <= 1000) {
+        taxa = 0.03;
+      } else if (valorSacar <= 5000) {
+        taxa = 0.02;
+      } else if (valorSacar <= 100000) {
+        taxa = 0.01;
+      } else {
+        taxa = 0; // Isento de taxa acima de R$ 101.000,00
+      }
+
+      const valorComTaxa = valorSacar * (1 - taxa);
 
       const sql: string = `
         UPDATE WALLET
@@ -191,7 +201,7 @@ export namespace WalletHandler {
       `;
 
       const result = (
-        await connection.execute(sql, [valorSacar, walletId], {
+        await connection.execute(sql, [valorComTaxa, walletId], {
           autoCommit: true,
         })
       ).rowsAffected;
@@ -286,9 +296,16 @@ export namespace WalletHandler {
       const valorSacar = req.get("valorSacar");
       const metodo = req.get("metodo"); // Banco || PIX
 
-      if (metodo && valorSacar && req.account && req.account.walletId) {
+      if (
+        metodo &&
+        valorSacar &&
+        req.account &&
+        req.account.walletId &&
+        req.account.balance
+      ) {
         const walletId = req.account.walletId;
         const accountId = req.account.id;
+        const balance = req.account.balance;
 
         if (Number(valorSacar) <= 0) {
           res.status(400).send({
@@ -297,20 +314,26 @@ export namespace WalletHandler {
           });
         }
 
-        if (metodo.toLocaleLowerCase() == "banco") {
-          const bancoNome = req.get("bancoNome");
-          const agencia = req.get("agencia");
-          const contaNumero = req.get("contaNumero");
+        if (balance <= Number(valorSacar)) {
+          res.status(400).send({
+            code: res.statusCode,
+            msg: "Saldo indisponivel",
+          });
+        } else {
+          if (metodo.toLocaleLowerCase() == "banco") {
+            const bancoNome = req.get("bancoNome");
+            const agencia = req.get("agencia");
+            const contaNumero = req.get("contaNumero");
 
-          if (bancoNome && agencia && contaNumero) {
-            const historicoWalletId = await createHistoricoWallet(
-              Number(valorSacar),
-              walletId,
-              "saque"
-            );
+            if (bancoNome && agencia && contaNumero) {
+              const historicoWalletId = await createHistoricoWallet(
+                Number(valorSacar),
+                walletId,
+                "saque"
+              );
 
-            if (historicoWalletId > 0) {
-              const bancoSql: string = `
+              if (historicoWalletId > 0) {
+                const bancoSql: string = `
             insert into
                 bank_account (
                     id,
@@ -329,49 +352,55 @@ export namespace WalletHandler {
                     :accountId
                 )
           `;
-              const result = await connection.execute(
-                bancoSql,
-                [bancoNome, agencia, contaNumero, historicoWalletId, accountId],
-                {
-                  autoCommit: true,
+                const result = await connection.execute(
+                  bancoSql,
+                  [
+                    bancoNome,
+                    agencia,
+                    contaNumero,
+                    historicoWalletId,
+                    accountId,
+                  ],
+                  {
+                    autoCommit: true,
+                  }
+                );
+
+                const success = await withdrawFundsWallet(
+                  walletId,
+                  Number(valorSacar)
+                );
+
+                if (result && success) {
+                  res.status(200).send({
+                    code: res.statusCode,
+                    msg: "Fundos retirados com sucesso!",
+                  });
                 }
-              );
-
-              const success = await withdrawFundsWallet(
-                walletId,
-                Number(valorSacar)
-              );
-
-              if (result && success) {
-                res.status(200).send({
+              } else {
+                res.status(400).send({
                   code: res.statusCode,
-                  msg: "Fundos retirados com sucesso!",
+                  msg: "Não foi possivel retirar saldo",
                 });
               }
             } else {
               res.status(400).send({
                 code: res.statusCode,
-                msg: "Não foi possivel retirar saldo",
+                msg: "Parametros invalidos",
               });
             }
-          } else {
-            res.status(400).send({
-              code: res.statusCode,
-              msg: "Parametros invalidos",
-            });
-          }
-        } else if (metodo.toLocaleLowerCase() == "pix") {
-          const chavePix = req.get("chavePix");
+          } else if (metodo.toLocaleLowerCase() == "pix") {
+            const chavePix = req.get("chavePix");
 
-          if (chavePix) {
-            const historicoWalletId = await createHistoricoWallet(
-              Number(valorSacar),
-              walletId,
-              "saque"
-            );
+            if (chavePix) {
+              const historicoWalletId = await createHistoricoWallet(
+                Number(valorSacar),
+                walletId,
+                "saque"
+              );
 
-            if (historicoWalletId > 0) {
-              const bancoSql: string = `
+              if (historicoWalletId > 0) {
+                const bancoSql: string = `
             insert into
                 pix_account (
                     id,
@@ -386,42 +415,43 @@ export namespace WalletHandler {
                     :accountId
                 )
           `;
-              const result = await connection.execute(
-                bancoSql,
-                [chavePix, historicoWalletId, accountId],
-                {
-                  autoCommit: true,
+                const result = await connection.execute(
+                  bancoSql,
+                  [chavePix, historicoWalletId, accountId],
+                  {
+                    autoCommit: true,
+                  }
+                );
+
+                const success = await withdrawFundsWallet(
+                  walletId,
+                  Number(valorSacar)
+                );
+
+                if (result && success) {
+                  res.status(200).send({
+                    code: res.statusCode,
+                    msg: "Fundos retirados com sucesso!",
+                  });
                 }
-              );
-
-              const success = await withdrawFundsWallet(
-                walletId,
-                Number(valorSacar)
-              );
-
-              if (result && success) {
-                res.status(200).send({
+              } else {
+                res.status(400).send({
                   code: res.statusCode,
-                  msg: "Fundos retirados com sucesso!",
+                  msg: "Não foi possivel retirar saldo",
                 });
               }
             } else {
               res.status(400).send({
                 code: res.statusCode,
-                msg: "Não foi possivel retirar saldo",
+                msg: "Parametros invalidos",
               });
             }
           } else {
-            res.status(400).send({
+            res.status(500).send({
               code: res.statusCode,
-              msg: "Parametros invalidos",
+              msg: "Erro ao retirar fundos.",
             });
           }
-        } else {
-          res.status(500).send({
-            code: res.statusCode,
-            msg: "Erro ao retirar fundos.",
-          });
         }
       } else {
         res.status(400).send({
@@ -524,23 +554,49 @@ export namespace WalletHandler {
 
     const account = req.account;
 
-    if (account && account.role != "moderador") {
+    if (
+      account &&
+      account.role != "moderador" &&
+      account.balance &&
+      account.walletId
+    ) {
+      const balance = account.balance;
+      const walletId = account.walletId;
+
       if (eventoId && valorAposta && choice) {
         const choiceBool: number = choice.toLowerCase() == "sim" ? 1 : 0;
 
-        const sucesso = await betOnEvent(
-          account.id,
-          eventoId,
-          Number(valorAposta),
-          choiceBool
-        );
+        if (balance <= Number(valorAposta)) {
+          res.status(400).send({
+            code: res.statusCode,
+            msg: "Saldo indisponivel",
+          });
+        } else {
+          const sucesso = await betOnEvent(
+            account.id,
+            eventoId,
+            Number(valorAposta),
+            choiceBool
+          );
 
-        res.status(sucesso ? 200 : 500).send({
-          code: res.statusCode,
-          msg: sucesso
-            ? "Aposta realizada com sucesso!"
-            : "Erro ao processar aposta",
-        });
+          if (sucesso) {
+            const historicoWalletId = await createHistoricoWallet(
+              valorAposta,
+              walletId,
+              "aposta"
+            );
+            res.status(200).send({
+              code: res.statusCode,
+              msg: "Aposta realizada com sucesso!",
+              historicoWalletId: historicoWalletId,
+            });
+          } else {
+            res.status(500).send({
+              code: res.statusCode,
+              msg: "Erro ao processar aposta",
+            });
+          }
+        }
       } else {
         res
           .status(400)
