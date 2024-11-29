@@ -359,7 +359,12 @@
                         }
                     }
 
-                    window.onload = toggleFields;
+                    document.addEventListener("DOMContentLoaded", () => {
+                        toggleFields();
+
+                        document.getElementById('metodoPix').addEventListener('change', toggleFields);
+                        document.getElementById('metodoBanco').addEventListener('change', toggleFields);
+                    });
                 </script>
 </body>
 

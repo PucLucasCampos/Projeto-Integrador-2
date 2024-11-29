@@ -190,7 +190,7 @@ const signUp = async (e) => {
         JSON.stringify({ data, newAccount: false })
       );
 
-      window.location.href = "home.html";
+      window.location.href = "login.html";
     } else {
       window.alert("Requisição inválida - Parâmetros faltando.");
     }
