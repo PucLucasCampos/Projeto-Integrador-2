@@ -30,6 +30,11 @@
           </li> -->
         </ul>
       </div>
+
+
+      <div id="btnAdicionarCredito">
+      </div>
+
       <div class="user-saldo">
         <div class="saldo balance" id="saldo-user">R$ SALDO DO USUARIO</div>
         <div class="text-w" id="nome-user">NOME DO USUARIO</div>
@@ -107,10 +112,14 @@
                 <div class="mb-2">
                   <textarea class="formulario" id="descriptionEvent" rows="3" placeholder="Descrição"></textarea>
                 </div>
-                <div class="mb-2">
-                  <input type="number" class="formulario" id="cotaEvent" placeholder="Valor da cota" value="0" min="0"
-                    required>
+                <div class="">
+                  <label for="categoriaEvent" class="text-d">Categoria</label>
+                  <br>
+                  <select class="formulario" aria-label="categoriaEvent" id="categoriaEvent">
+
+                  </select>
                 </div>
+
                 <div class="mb-2 d-flex ">
                   <div class="me-5">
                     <label for="dateStartEvent" class="text-d">Data de Início</label>
@@ -128,7 +137,7 @@
 
               <!-- Mensagem erro (estilizar) -->
               <div id="erroCreateEvent">
-                <span>APAGAR ESSE TEXTO APÓS FAZER O ESTILO</span>
+                <span></span>
               </div>
             </div>
           </div>
@@ -136,11 +145,6 @@
       </div>
   </main>
 
-  <button class="botao-carteira btn-lg mx-2" data-bs-toggle="modal" data-bs-target="#adicionarCreditoModal">
-    Adicionar Créditos
-  </button>
-
-  <!-- Modal Adicionar Creditos -->
   <div class="modal fade" id="adicionarCreditoModal" tabindex="-1" aria-labelledby="adicionarCreditoModalLabel"
     aria-hidden="true">
     <div class="modal-dialog">
@@ -179,38 +183,220 @@
 
           <!-- Mensagem erro (estilizar) -->
           <div id="erroAdicionarCredito">
-            <span>APAGAR ESSE TEXTO APÓS FAZER O ESTILO</span>
+            <span></span>
           </div>
         </div>
       </div>
     </div>
   </div>
+
+  <div class="modal fade" id="betModal" tabindex="-1" aria-labelledby="betModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="betModalLabel">Fazer Aposta</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="betForm">
+            <div class="mb-3">
+              <label for="betAmount" class="form-label">Valor da Aposta (R$)</label>
+              <input type="number" class="form-control" id="betAmount" placeholder="Insira o valor" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Escolha uma opção:</label>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="betOption" id="betOptionYes" value="Sim" required>
+                <label class="form-check-label" for="optionYes">Sim</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="betOption" id="betOptionNo" value="Não" required>
+                <label class="form-check-label" for="optionNo">Não</label>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-warning">Confirmar</button>
+          </form>
+
+          <!-- Mensagem erro (estilizar) -->
+          <div id="errorApostarEvent">
+            <span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="evaluateModal" tabindex="-1" aria-labelledby="evaluateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="evaluateModalLabel">Avaliar Evento</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="evaluateForm">
+            <div class="mb-3">
+              <label class="form-label">Escolha uma opção:</label>
+              <div class="form-check" id="">
+                <input class="form-check-input" type="radio" name="evaluationOption" id="approveOption" value="Aprovar"
+                  required>
+                <label class="form-check-label" for="approveOption">Aprovar</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="evaluationOption" id="rejectOption" value="Reprovar"
+                  required>
+                <label class="form-check-label" for="rejectOption">Reprovar</label>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-warning">Confirmar</button>
+          </form>
+
+          <!-- Mensagem erro (estilizar) -->
+          <div id="errorAvaliateEvent">
+            <span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="finishModal" tabindex="-1" aria-labelledby="finishModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="finishModalLabel">Finalizar Evento</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="finishEventForm">
+            <div class="mb-3">
+              <label class="form-label">Escolha uma opção:</label>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="finishEventOption" id="finishEventOptionYes"
+                  value="Sim" required>
+                <label class="form-check-label" for="optionYes">Sim</label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="finishEventOption" id="finishEventOptionNo"
+                  value="Não" required>
+                <label class="form-check-label" for="optionNo">Não</label>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-warning">Confirmar</button>
+          </form>
+
+          <!-- Mensagem erro (estilizar) -->
+          <div id="errorFinishEvent">
+            <span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </body>
 <script type="module" src="./scripts/event.js"></script>
 <script type="module" src="./scripts/account.js"></script>
 
 <script type="module">
   import { isModerador, navbar } from "./scripts/account.js";
+  import { fetchSelectCategory, evalueteNewEvent, betEvent, finishEvent } from "./scripts/event.js";
 
-  navbar([1])
+  document.addEventListener("DOMContentLoaded", () => {
+    navbar([1]);
 
-  if (isModerador()) {
+    if (isModerador()) {
+      const parentNavTab = document.getElementById("nav-tab");
+      const tabBtn = document.createElement("button");
+      tabBtn.classList.add("botao", "nav-link");
+      tabBtn.id = "nav-create-tab";
+      tabBtn.setAttribute("data-bs-toggle", "tab");
+      tabBtn.setAttribute("data-bs-target", "#nav-create");
+      tabBtn.setAttribute("type", "button");
+      tabBtn.setAttribute("role", "tab");
+      tabBtn.setAttribute("aria-controls", "nav-create");
+      tabBtn.setAttribute("aria-selected", "false");
 
-    const parentNavTab = document.getElementById("nav-tab");
-    const tabBtn = document.createElement("button");
-    tabBtn.classList.add("botao", "nav-link");
-    tabBtn.id = "nav-create-tab";
-    tabBtn.setAttribute("data-bs-toggle", "tab");
-    tabBtn.setAttribute("data-bs-target", "#nav-create");
-    tabBtn.setAttribute("type", "button");
-    tabBtn.setAttribute("role", "tab");
-    tabBtn.setAttribute("aria-controls", "nav-create");
-    tabBtn.setAttribute("aria-selected", "false");
+      tabBtn.innerHTML = "Criar evento";
 
-    tabBtn.innerHTML = "Criar evento";
+      parentNavTab.appendChild(tabBtn)
+    } else {
 
-    parentNavTab.appendChild(tabBtn)
-  }
+      // <button class="botao-carteira btn-lg mx-2" data-bs-toggle="modal" data-bs-target="#adicionarCreditoModal">
+          // Adicionar Créditos
+        // </button>
+
+      const btnAdicionarCredito = document.getElementById("btnAdicionarCredito")
+      const btnAddCredito = document.createElement("button");
+      btnAddCredito.classList.add("botao-carteira", "btn-lg", "mx-2");
+      btnAddCredito.id = "nav-create-tab";
+      btnAddCredito.setAttribute("data-bs-toggle", "modal");
+      btnAddCredito.setAttribute("data-bs-target", "#adicionarCreditoModal");
+      btnAddCredito.setAttribute("type", "button");
+      btnAddCredito.innerHTML = "Adicionar Créditos";
+
+
+      btnAdicionarCredito.appendChild(btnAddCredito)
+
+    }
+
+    const selectCategoryContent = document.getElementById("categoriaEvent");
+
+    selectCategoryContent && fetchSelectCategory()
+
+    const evaluateModal = document.getElementById("evaluateModal");
+    evaluateModal.addEventListener("show.bs.modal", (event) => {
+      const button = event.relatedTarget;
+      const eventId = button.getAttribute("data-event-id");
+
+      const evaluateForm = document.getElementById("evaluateForm");
+
+      evaluateForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        await evalueteNewEvent(eventId);
+
+        const modalInstance = bootstrap.Modal.getInstance(evaluateModal);
+        modalInstance.hide();
+      });
+    });
+
+    const betModal = document.getElementById("betModal");
+    betModal.addEventListener("show.bs.modal", (event) => {
+      const button = event.relatedTarget;
+      const eventId = button.getAttribute("data-event-id");
+
+      const betForm = document.getElementById("betForm");
+      betForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        await betEvent(eventId);
+
+        const modalInstance = bootstrap.Modal.getInstance(betModal);
+        modalInstance.hide();
+      });
+    });
+
+    const finishModal = document.getElementById("finishModal");
+    finishModal.addEventListener("show.bs.modal", (event) => {
+      const button = event.relatedTarget;
+      const eventId = button.getAttribute("data-event-id");
+
+      const finishForm = document.getElementById("finishEventForm");
+      finishForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        await finishEvent(eventId);
+
+        const modalInstance = bootstrap.Modal.getInstance(betModal);
+        modalInstance.hide();
+      });
+    });
+
+  });
+
+
+
 </script>
 
 

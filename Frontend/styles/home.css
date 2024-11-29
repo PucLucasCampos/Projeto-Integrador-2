@@ -175,3 +175,24 @@
 .event-button:hover{
     background-color: #b39800;
 }
+
+.avaliar-button{
+    width: 80px;
+    height: auto;
+    background: #419b5f;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.avaliar-button:hover{
+    background-color: #00812b;
+}
+
+.botao-carteira {
+    background-color: #b58900; /* Amarelo escuro */
+    color: black; /* Texto branco */
+    border: none; /* Sem borda */
+    transition: background-color 0.3s ease, transform 0.2s ease; /* Suaviza transições */
+}

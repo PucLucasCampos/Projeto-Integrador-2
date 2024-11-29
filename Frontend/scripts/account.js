@@ -1,6 +1,6 @@
 import { cookieStorage, fetchData } from "./utils/index.js";
 
-const { setCookie, getCookie } = cookieStorage();
+const { setCookie, getCookie, deleteAllCookies } = cookieStorage();
 
 var navTabActive = "tbody-historic"; // "tbody-historic" | "tbody-deposits" | "tbody-bets" | "tbody-withdraw"
 
@@ -31,7 +31,12 @@ const account = async () => {
 export function isModerador() {
   const account = JSON.parse(localStorage.getItem("usuario"));
 
-  return account.role == "moderador" ? true : false;
+  if (!account) {
+    console.warn("Usuário não encontrado no localStorage.");
+    return false;
+  }
+
+  return account.role === "moderador";
 }
 
 const addFounds = async (e) => {
@@ -182,10 +187,10 @@ const signUp = async (e) => {
 
       localStorage.setItem(
         "usuario",
-        JSON.stringify({ data, newAccount: true })
+        JSON.stringify({ data, newAccount: false })
       );
 
-      window.location.href = "home.html";
+      window.location.href = "login.html";
     } else {
       window.alert("Requisição inválida - Parâmetros faltando.");
     }
@@ -229,16 +234,40 @@ const login = async (e) => {
   }
 };
 
-function createMenuItem(title, href, active) {
+function createMenuItem(title, href, active, callback) {
   const navbar = document.getElementById("navbar");
-  const navbarItem = document.createElement("li", {
-    class: "nav-item",
-  });
+  if (!navbar) {
+    console.error("Elemento navbar não encontrado!");
+    return;
+  }
+
+  const navbarItem = document.createElement("li");
+  navbarItem.classList.add("nav-item");
 
   navbarItem.innerHTML = `<a class='text-g ${
     active ? "ativo" : ""
   } menu-g' aria-current='page' href='${href}'>${title}</a>`;
+
+  if (callback && typeof callback === "function") {
+    navbarItem.querySelector("a").addEventListener("click", (e) => {
+      e.preventDefault();
+      callback();
+    });
+  }
+
   navbar.appendChild(navbarItem);
+}
+
+function exitAccount() {
+  if (localStorage.getItem("usuario")) {
+    localStorage.removeItem("usuario");
+    console.log("Usuário removido do localStorage.");
+  } else {
+    console.warn("Nenhum usuário encontrado no localStorage.");
+  }
+
+  window.location.href = "login.html";
+  deleteAllCookies();
 }
 
 export function navbar(activeId) {
@@ -260,16 +289,27 @@ export function navbar(activeId) {
       title: "SAIR",
       file: "login.html",
       isModerador: false,
+      function: exitAccount,
     },
   ];
 
   menu.forEach((item) => {
     if (item.isModerador) {
-      if (isModerador()) {
-        createMenuItem(item.title, item.file, activeId.includes(item.id));
+      if (!isModerador()) {
+        createMenuItem(
+          item.title,
+          item.file,
+          activeId.includes(item.id),
+          item.function
+        );
       }
     } else {
-      createMenuItem(item.title, item.file, activeId.includes(item.id));
+      createMenuItem(
+        item.title,
+        item.file,
+        activeId.includes(item.id),
+        item.function
+      );
     }
   });
 }

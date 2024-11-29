@@ -459,47 +459,53 @@ export namespace WalletHandler {
     try {
       connection = await OracleDB.getConnection(dbConfig);
 
-      const sql: string = `
-        SELECT ID, saldo FROM WALLET WHERE USERID = :userId
-      `;
+      const sqlGetWallet = `
+          SELECT ID, SALDO FROM WALLET WHERE USERID = :userId
+        `;
 
-      const result = (await connection.execute(sql, [userId])).rows as [
-        { ID: number; SALDO: number }
-      ];
+      const result = (await connection.execute(sqlGetWallet, [userId]))
+        .rows as [{ ID: number; SALDO: number }];
 
       if (result && result.length > 0) {
         const wallet = result[0];
-
         const saldoAtual = wallet.SALDO;
-        if (saldoAtual && saldoAtual < valorAposta) {
+
+        if (!saldoAtual || saldoAtual < valorAposta) {
+          console.error("Saldo insuficiente para realizar a aposta.");
           return false;
         }
 
+        const sqlInsertBet = `
+            INSERT INTO BETS (ID, VALOR, CHOICE, EVENTOID, ACCOUNTSID)
+            VALUES (SEQ_ACCOUNTS.NEXTVAL, :valorAposta, :choice, :eventoId, :userId)
+          `;
         const resultAposta = await connection.execute(
-          `INSERT INTO BETS (ID, VALOR, CHOICE, EVENTOID, ACCOUNTSID)
-           VALUES (SEQ_ACCOUNTS.NEXTVAL, :valorAposta, :choice, :eventoId, :userId)`,
+          sqlInsertBet,
           [valorAposta, choice, eventoId, userId],
-          { autoCommit: true }
+          { autoCommit: false }
         );
 
-        await connection.execute(
-          `UPDATE WALLET SET SALDO = SALDO - :valorAposta WHERE ID = :walletId`,
-          [valorAposta, wallet.ID],
-          { autoCommit: true }
-        );
+        const sqlUpdateWallet = `
+            UPDATE WALLET SET SALDO = SALDO - :valorAposta WHERE ID = :walletId
+          `;
+        await connection.execute(sqlUpdateWallet, [valorAposta, wallet.ID], {
+          autoCommit: false,
+        });
 
         if (resultAposta) {
+          await connection.commit();
           return true;
         }
       }
     } catch (err) {
-      console.error(err);
+      console.error("Erro ao processar aposta:", err);
+      if (connection) await connection.rollback();
     } finally {
       if (connection) {
         try {
           await connection.close();
         } catch (err) {
-          console.error(err);
+          console.error("Erro ao fechar conexão:", err);
         }
       }
     }

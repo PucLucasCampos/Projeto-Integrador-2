@@ -1,4 +1,5 @@
 import { isModerador } from "./account.js";
+import { formatDateForOracle } from "./utils/formatDateForOracle.js";
 import {
   fetchData,
   calculateTimeRemaining,
@@ -52,7 +53,7 @@ const createCardEvent = (event) => {
   });
 
   newCard.innerHTML = `
-            <div class="event-card">
+            <div class="event-card" id='${event.id}'>
                 <div class="event-title">${event.titulo}</div>
                 <div class="event-text">Apostas Realizadas: ${event.qtdApostas
                   .toString()
@@ -64,22 +65,31 @@ const createCardEvent = (event) => {
            Status: ${event.status}
             </div>
             ${
-              event.status == "approved"
-                ? '<button class="event-button">Apostar</button>'
+              event.status == "approved" &&
+              !isModerador() &&
+              new Date() < new Date(event.dataFim)
+                ? `<button class="event-button" data-event-id="${event.id}" data-bs-toggle="modal" data-bs-target="#betModal">Apostar</button>`
                 : ""
             }
                 ${
                   isModerador()
-                    ? `<button class="event-button">Avaliar</button>`
+                    ? `
+                    ${
+                      event.status === "awaiting approval"
+                        ? `<button class="avaliar-button" data-event-id="${event.id}" data-bs-toggle="modal" data-bs-target="#evaluateModal">Avaliar</button>`
+                        : ""
+                    }
+                   ${
+                     event.status != "closed" &&
+                     new Date() > new Date(event.dataFim)
+                       ? `<button class="avaliar-button" data-event-id="${event.id}" data-bs-toggle="modal" data-bs-target="#finishModal">Finalizar</button>`
+                       : ""
+                   }
+                    `
                     : ""
                 }
               </div>
-
-             
-     
     `;
-
-
 
   document.querySelector(`#${navTabActive}`).appendChild(newCard);
 };
@@ -118,13 +128,13 @@ const fetchEventsTab = {
 export const fetchEvents = async (status) => {
   try {
     const urlParams = new URLSearchParams(window.location.search);
-    const categoria = urlParams.get("category")
+    const categoria = urlParams.get("category");
 
     const params = {
       parametro: status ? status : fetchEventsTab[navTabActive],
-    }
+    };
 
-    Object.assign(params, categoria && {categoria})
+    Object.assign(params, categoria && { categoria });
 
     const data = await fetchData("/getEvents", "", "GET", params);
 
@@ -169,15 +179,170 @@ export const fetchCategory = async () => {
   }
 };
 
-const createEvent = (e) => {
+const createEvent = async (e) => {
   e.preventDefault();
 
   const msgError = document.getElementById("erroCreateEvent");
 
   try {
-    console.log("Criar Evento");
+    const titulo = document.getElementById("titleEvent");
+    const descricao = document.getElementById("descriptionEvent");
+    const dataInicio = document.getElementById("dateStartEvent");
+    const dataFim = document.getElementById("dateEndEvent");
+    const categoria = document.getElementById("categoriaEvent");
+
+    if (!titulo.value.trim() || !descricao.value.trim()) {
+      msgError.innerHTML = "Título e descrição são obrigatórios.";
+      return;
+    }
+
+    if (
+      isNaN(Date.parse(dataInicio.value)) ||
+      isNaN(Date.parse(dataFim.value))
+    ) {
+      msgError.innerHTML = "Datas inválidas.";
+      return;
+    }
+
+    const data = await fetchData(
+      "/addNewEvent",
+      getCookie("token"),
+      "POST",
+      {},
+      {
+        titulo: titulo.value,
+        descricao: descricao.value,
+        dataInicio: dataInicio.value,
+        dataFim: dataFim.value,
+        categoriaId: categoria.value,
+      }
+    );
+
+    if (data.code == 200) {
+      fetchEvents();
+      titulo.value = "";
+      descricao.value = "";
+      dataInicio.value = "";
+      dataFim.value = "";
+    }
+
+    msgError.innerHTML = data.msg;
   } catch (error) {
     msgError.innerHTML = "Não foi possivel Criar Evento";
+  } finally {
+    setTimeout(() => {
+      msgError.innerHTML = "";
+    }, 1000);
+  }
+};
+
+export const fetchSelectCategory = async () => {
+  const selectCategoryContent = document.getElementById("categoriaEvent");
+  selectCategoryContent.innerHTML = "";
+
+  const data = await fetchData("/getCategory", "", "GET");
+  const dataCategoria = data.categoria;
+
+  dataCategoria.map((item) => {
+    const newOption = document.createElement("option");
+    newOption.value = item.id;
+    newOption.textContent = item.nome;
+    document.querySelector(`#categoriaEvent`).appendChild(newOption);
+  });
+};
+
+export const evalueteNewEvent = async (eventId) => {
+  const msgError = document.getElementById("errorAvaliateEvent");
+
+  try {
+    const avaliar = document.getElementById("approveOption").checked
+      ? "aprovado"
+      : "reprovado";
+
+    const data = await fetchData(
+      "/evaluateNewEvent",
+      getCookie("token"),
+      "POST",
+      {
+        id: eventId,
+        avaliar,
+      }
+    );
+
+    if (data.code == 200) {
+      fetchEvents();
+    }
+
+    msgError.innerHTML = data.msg;
+  } catch (error) {
+    msgError.innerHTML = "Não foi possivel Avaliar Evento";
+  } finally {
+    setTimeout(() => {
+      msgError.innerHTML = "";
+    }, 1000);
+  }
+};
+
+export const betEvent = async (eventId) => {
+  const msgError = document.getElementById("errorApostarEvent");
+
+  try {
+    const betAmount = document.getElementById("betAmount");
+
+    if (betAmount.value) {
+      const choice = document.getElementById("betOptionYes").checked
+        ? "sim"
+        : "nao";
+
+      const data = await fetchData(
+        "/betOnEvent",
+        getCookie("token"),
+        "POST",
+        {},
+        {
+          eventoId: eventId,
+          valorAposta: betAmount.value,
+          choice,
+        }
+      );
+
+      if (data.code === 200) {
+        window.location.reload();
+      }
+
+      msgError.innerHTML = data.msg;
+    } else {
+      msgError.innerHTML = "Parâmetros inválidos";
+    }
+  } catch (error) {
+    msgError.innerHTML = "Não foi possível apostar no evento";
+  } finally {
+    setTimeout(() => {
+      msgError.innerHTML = "";
+    }, 1000);
+  }
+};
+
+export const finishEvent = async (eventId) => {
+  const msgError = document.getElementById("errorFinishEvent");
+
+  try {
+    const choice = document.getElementById("finishEventOptionYes").checked
+      ? "sim"
+      : "nao";
+
+    const data = await fetchData("/finishEvent", getCookie("token"), "POST", {
+      eventId: eventId,
+      occurred: choice,
+    });
+
+    if (data.code === 200) {
+      window.location.reload();
+    }
+
+    msgError.innerHTML = data.msg;
+  } catch (error) {
+    msgError.innerHTML = "Não foi possível apostar no evento";
   } finally {
     setTimeout(() => {
       msgError.innerHTML = "";
@@ -215,10 +380,10 @@ document.addEventListener("DOMContentLoaded", () => {
   formCreateEvent && formCreateEvent.addEventListener("submit", createEvent);
 
   const urlParams = new URLSearchParams(window.location.search);
-  const categoria = urlParams.get("category")
+  const categoria = urlParams.get("category");
 
-  if(categoria) {
-    navTabActive = "card-category"
+  if (categoria) {
+    navTabActive = "card-category";
   }
 });
 
