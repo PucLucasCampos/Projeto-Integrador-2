@@ -189,3 +189,10 @@
 .avaliar-button:hover{
     background-color: #00812b;
 }
+
+.botao-carteira {
+    background-color: #b58900; /* Amarelo escuro */
+    color: black; /* Texto branco */
+    border: none; /* Sem borda */
+    transition: background-color 0.3s ease, transform 0.2s ease; /* Suaviza transições */
+}

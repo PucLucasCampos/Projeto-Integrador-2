@@ -30,6 +30,11 @@
           </li> -->
         </ul>
       </div>
+
+
+      <div id="btnAdicionarCredito">
+      </div>
+
       <div class="user-saldo">
         <div class="saldo balance" id="saldo-user">R$ SALDO DO USUARIO</div>
         <div class="text-w" id="nome-user">NOME DO USUARIO</div>
@@ -139,10 +144,6 @@
         </div>
       </div>
   </main>
-
-  <button class="botao-carteira btn-lg mx-2" data-bs-toggle="modal" data-bs-target="#adicionarCreditoModal">
-    Adicionar Créditos
-  </button>
 
   <div class="modal fade" id="adicionarCreditoModal" tabindex="-1" aria-labelledby="adicionarCreditoModalLabel"
     aria-hidden="true">
@@ -271,11 +272,13 @@
             <div class="mb-3">
               <label class="form-label">Escolha uma opção:</label>
               <div class="form-check">
-                <input class="form-check-input" type="radio" name="finishEventOption" id="finishEventOptionYes" value="Sim" required>
+                <input class="form-check-input" type="radio" name="finishEventOption" id="finishEventOptionYes"
+                  value="Sim" required>
                 <label class="form-check-label" for="optionYes">Sim</label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="radio" name="finishEventOption" id="finishEventOptionNo" value="Não" required>
+                <input class="form-check-input" type="radio" name="finishEventOption" id="finishEventOptionNo"
+                  value="Não" required>
                 <label class="form-check-label" for="optionNo">Não</label>
               </div>
             </div>
@@ -290,7 +293,7 @@
       </div>
     </div>
   </div>
-  
+
 </body>
 <script type="module" src="./scripts/event.js"></script>
 <script type="module" src="./scripts/account.js"></script>
@@ -303,7 +306,6 @@
     navbar([1]);
 
     if (isModerador()) {
-
       const parentNavTab = document.getElementById("nav-tab");
       const tabBtn = document.createElement("button");
       tabBtn.classList.add("botao", "nav-link");
@@ -318,6 +320,24 @@
       tabBtn.innerHTML = "Criar evento";
 
       parentNavTab.appendChild(tabBtn)
+    } else {
+
+      // <button class="botao-carteira btn-lg mx-2" data-bs-toggle="modal" data-bs-target="#adicionarCreditoModal">
+          // Adicionar Créditos
+        // </button>
+
+      const btnAdicionarCredito = document.getElementById("btnAdicionarCredito")
+      const btnAddCredito = document.createElement("button");
+      btnAddCredito.classList.add("botao-carteira", "btn-lg", "mx-2");
+      btnAddCredito.id = "nav-create-tab";
+      btnAddCredito.setAttribute("data-bs-toggle", "modal");
+      btnAddCredito.setAttribute("data-bs-target", "#adicionarCreditoModal");
+      btnAddCredito.setAttribute("type", "button");
+      btnAddCredito.innerHTML = "Adicionar Créditos";
+
+
+      btnAdicionarCredito.appendChild(btnAddCredito)
+
     }
 
     const selectCategoryContent = document.getElementById("categoriaEvent");
