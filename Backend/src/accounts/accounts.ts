@@ -19,6 +19,7 @@ export namespace AccountsHandler {
       role: string;
       token?: string;
       walletId?: number;
+      balance?:number
    };
 
    /**

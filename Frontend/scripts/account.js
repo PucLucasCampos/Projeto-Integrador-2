@@ -5,7 +5,7 @@ const { setCookie, getCookie, deleteAllCookies } = cookieStorage();
 var navTabActive = "tbody-historic"; // "tbody-historic" | "tbody-deposits" | "tbody-bets" | "tbody-withdraw"
 
 // Buscar dados do usuário e atualizar na página
-const account = async () => {
+export const account = async () => {
   try {
     if (getCookie("token")) {
       const data = await fetchData("/getAccount", getCookie("token"), "GET");
@@ -443,5 +443,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (tableHistory) history();
 });
-
-account();
