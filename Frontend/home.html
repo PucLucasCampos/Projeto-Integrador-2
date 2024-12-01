@@ -335,7 +335,7 @@
 
 
       btnAdicionarCredito.appendChild(btnAddCredito)
-    } 
+    }
 
     const selectCategoryContent = document.getElementById("categoriaEvent");
 
@@ -359,7 +359,8 @@
           modalInstance.hide();
         }, 1000)
 
-    });
+      });
+    })
 
     const betModal = document.getElementById("betModal");
     betModal.addEventListener("show.bs.modal", (event) => {
@@ -377,7 +378,9 @@
           modalInstance.hide();
         }, 1000)
 
-    });
+      });
+
+    })
 
     const finishModal = document.getElementById("finishModal");
     finishModal.addEventListener("show.bs.modal", (event) => {
@@ -395,14 +398,12 @@
           modalInstance.hide();
         }, 1000)
 
+      });
+
     });
 
-  });
-
-
+  })
 
 </script>
-
-
 
 </html>
