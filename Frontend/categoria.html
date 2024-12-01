@@ -172,10 +172,12 @@
 
 
 <script type="module">
-  import { isModerador, navbar } from "./scripts/account.js";
+  import { isModerador, navbar, account } from "./scripts/account.js";
   import { fetchSelectCategory, evalueteNewEvent, betEvent, finishEvent } from "./scripts/event.js";
 
-  document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener("DOMContentLoaded", async () => {
+    await account()
+
     navbar([]);
 
     if (isModerador()) {

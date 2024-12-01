@@ -327,8 +327,7 @@
                 <script type="module" src="./scripts/account.js"></script>
 
                 <script type="module">
-                    import { navbar } from "./scripts/account.js";
-                    navbar([2])
+                    import { navbar, account } from "./scripts/account.js";
 
                     const modalAddFounds = document.getElementById("adicionarCreditoModal");
                     const valorCreditoInput = document.getElementById("valorCredito");
@@ -359,8 +358,10 @@
                         }
                     }
 
-                    document.addEventListener("DOMContentLoaded", () => {
+                    document.addEventListener("DOMContentLoaded", async () => {
                         toggleFields();
+                        await account()
+                        navbar([2])
 
                         document.getElementById('metodoPix').addEventListener('change', toggleFields);
                         document.getElementById('metodoBanco').addEventListener('change', toggleFields);
